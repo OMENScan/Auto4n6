@@ -10,7 +10,10 @@ SET:CopyPath=Part
 SET:SyslogS:127.0.0.1
 SET:SyslogP=5514
 SET:SyslogL=min
-SAY:{+} Processing Memory Dump: &VR1 (Full Path: &VR0)
+SAY:[+] Logging This Processing Run...
+OPN:&Dir\Auto4n6.csv
+OUT:"&Acn","&VR1","&Tim"
+SAY:[+] Processing Memory Dump: &VR1 (Full Path: &VR0)
 CKY:&Acq
  SAY:[+] Processing Directory Already Exists: &Acq
  BYE:

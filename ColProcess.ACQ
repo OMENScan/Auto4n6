@@ -10,6 +10,9 @@ SET:CopyPath=Part
 SET:SyslogS:127.0.0.1
 SET:SyslogP=5514
 SET:SyslogL=min
+SAY:[+] Logging This Processing Run...
+OPN:&Dir\Auto4n6.csv
+OUT:"&Acn","&VR1","&Tim"
 SAY:[+] Processing Triage Collection: &VR1 (Full Path: &VR0)
 CKY:&Acq
  SAY:[+] Processing Directory Already Exists: &Acq
@@ -44,6 +47,8 @@ SAY:[+] Triage Decomppress Complete: &VR1
 ACQ:\
 SAY:[+] Running Triage Report: &VR1
 SYS:py &Dir\TriageReport\TriageReport.py -d &Acq -c &Dir\TriageReport\AChReport.cfg
+SAY:[+] Copying Sort Javascript Library
+CPY:"&Dir\TriageReport\sortable-Ach.js" "&Acq"
 SAY:[+] Triage Report Completed: &VR1
 SAY:{+} Running Plaso Timeliner: &VR1
 INI:PlasoX.ACQ
