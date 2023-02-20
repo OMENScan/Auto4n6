@@ -59,7 +59,7 @@ to create an automated pipeline that processes both memory images and triage col
 Auto4n6 is currently in an Alpha (v0.01) state so it takes quite a bit of configuration to make it work.  That will change as I improve the software.  Essentially AChoirX runs several FOSS Forensic utilities and organizes them into a consistent set of outputs for the forensic analyst.  Below I will outline the tools it uses and how to configure them so that an anlyst can customize it to their own needs and preferences.
 
 # Step 1: The AChoirX Scripts
-Auto4n6 currenlty consists of four (4) 
+Auto4n6 currently consists of four (4) 
 <a href=https://github.com/OMENScan/AChoirX> AChoirX </a> scripts
 <ul>
  <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/AChoir.ACQ> The main driver script</a></li>
@@ -74,27 +74,27 @@ First it is important to note that
 can function in "Blocked" or "UnBlocked" mode.  In Blocked mode a program waits until it's previous sub-processes wait until they complete to run the next process.  In UnBlocked mode a program can run multiple sub-process simultaneously. Auto4n6 works in UnBlocked mode, meaning that multiple triage and memory parsing process can run at the same time.  This makes processing MUCH faster but imtroduces some complication.  All you really need to know is that Auto4n6 can run parse multiple memory dumps and triage collections at the same time.  That means that monitoring the console can be confusing as you see multiple processes executing at the same time.  Auto4n6 does not have any issues with this, but it can be confusing to watch the console as it displays messages across multiple parsing routines.
 
 ## Syslog
-By default Auto4n6 logs to the console, to a unique individual log file (per processing routine) and to a local Syslog (127.0.0.1).  If you have an external Syslog, you can change the syslog parameters to point to your centralized syslog. If you prefer not to syslog the console message, this can be commented out.
+By default Auto4n6 logs to the console, to a unique individual log file (per processing routine) and to a local Syslog (<b>127.0.0.1</b>).  If you have an external Syslog, you can change the syslog parameters to point to your centralized syslog. If you prefer not to syslog the console message, this can be commented out.
 
 ## The Memory Dump Processing Queue
-By default, Auto4n6 waits for Memory Dumps to appear in C:\Auto-Mem.  This can be changed in the script to point to a different directory of your choosing.
+By default, Auto4n6 waits for Memory Dumps to appear in <b>C:\Auto-Mem</b>.  This can be changed in the script to point to a different directory of your choosing.
 
 ## The Triage Collection Processing Queue
-By default, Auto4n6 waits for Triage collections to appear in C:\Auto-Col.  This can be changed in the script to point to a different directory of your choosing.
+By default, Auto4n6 waits for Triage collections to appear in <b>C:\Auto-Col</b>.  This can be changed in the script to point to a different directory of your choosing.
 
 ## What is Where?
 Auto4n6 separates each processing run in a unique directory to ensure that one processing run doesn't step on another.  Since Auto4n6 is designed to be able to process at scale, multiple processing runs can be running simultaneously.  The need to understand which processing run is associated with which memory/triage collection becomes an important requirement.
 
 To address this Auto4n6 keeps two(2) running files:
 <ul>
- <li>Auto4n6.csv - Shows which processing run is associated with which memory/triage collection input in CSV format</li>
- <li>Auto4n6.HTML - Shows which processing run is associated with which memory/triage collection input in an HTML file</li>
+ <li><b>Auto4n6.csv</b> - Shows which processing run is associated with which memory/triage collection input in CSV format</li>
+ <li><b>Auto4n6.HTML</b> - Shows which processing run is associated with which memory/triage collection input in an HTML file</li>
 </ul>
 
 Using these files, an analyst can determine which input file is associate with which output directory.  To make this clearer, I recommend that memory dumps and Triage Collections be named uniquely to help in quicker matching of where the output is located.
 
 # Step 3: The Memory Dump Processing Script
-Once Auto4n6 detects a file in the Memory Dump directory (queue), it will create a new Auto4n6 directory and move the memory dump to the new directory.  This directory can be seen in the Main Driver script, and the default is C:\Auto-Mem.
+Once Auto4n6 detects a file in the Memory Dump directory (queue), it will create a new Auto4n6 directory and move the memory dump to the new directory.  This directory can be seen in the Main Driver script, and the default is <b>C:\Auto-Mem</b>.
 
 The memory dump processing script will then run several 
 <a href=https://www.volatilityfoundation.org/3> volatility</a>
@@ -105,9 +105,9 @@ For
 <a href=https://www.volatilityfoundation.org/3> volatility</a> to work properly 
 <a href=https://www.python.org/downloads/>Python 3</a> must be installed on the system.  Auto4n6 expects
 <a href=https://www.volatilityfoundation.org/3> volatility</a> to be installed in 
-C:\Auto4n6\Volatility3 and for
+<b>C:\Auto4n6\Volatility3</b> and for
 <a href=https://github.com/Neo23x0/Loki>LOKI</a> to be installed in
-C:\Auto4n6\Loki - These locations can be changed in the <b>MemProcess.ACQ</b> Script, but I recommend keeping the default locations.
+<b>C:\Auto4n6\Loki</b> - These locations can be changed in the <b>MemProcess.ACQ</b> Script, but I recommend keeping the default locations.
 
 Please note that both 
 <a href=https://www.volatilityfoundation.org/3> volatility</a> and 
