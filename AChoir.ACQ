@@ -15,11 +15,45 @@ SET:SyslogS:127.0.0.1
 SET:SyslogP=5514
 SET:SyslogL=none
 LBL:Start
+CN0:0
 SAY:[+] Checking for new Memory Dumps to Process.
 FOR:C:\Auto-Mem\*
 EXA:A-AChoirx.exe /ini:MemProcess.ACQ "/VR0:&For" "/VR1:&Fnm"
+*******************************************************
+* Did we find Anything?                               *
+*******************************************************
+VR1:--
+VR1:&For
+NEQ:&VR1 --
+ CN0:++
+END:
 SAY:[+] Checking for new Triage Collections to Process.
 FOR:C:\Auto-Col\*
 EXA:A-AChoirx.exe /ini:ColProcess.ACQ  /VR0:&For /VR1:&Fnm
-SLP:65
+*******************************************************
+* Did we find Anything?                               *
+*******************************************************
+VR1:--
+VR1:&For
+NEQ:&VR1 --
+ CN0:++
+END:
+SLP:30
+*******************************************************
+* Rewrite the HTML Report if we ran Anything          *
+*******************************************************
+N>>:&CN0 0
+ Del:Auto4n6.html
+ Opn:Auto4n6.html
+ Out:<html><head><title>Auto4n6 Parsing Report</title></head>
+ Out:<body><h2>Auto4n6 Parsing Report</h2>
+ Out:<p>Below is an Index of the Auto4n6 Runs</p>
+ Out:<Center><table border=2 width=98% >
+ Lst:Auto4n6.csv
+ Out:<tr><td>Collection Name</td> <td>Collection</td><td>Date - Time</td></tr>
+ Out:<tr><td>&ls0</td> <td>&ls1</td><td>&ls2</td></tr>
+ Out:</table></Center></body></html>
+ Opn:Semaph.ore
+END:
+SLP:35
 JMP:Start

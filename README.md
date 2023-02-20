@@ -68,5 +68,31 @@ Auto4n6 currenlty consists of four (4)
  <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/PlasoX.ACQ> The Plaso timelining script</a></li>
 </ul>
 
+# Step1: The Auto4n6 Main Driver Script
+First it is important to note that 
+<a href=https://github.com/OMENScan/AChoirX> AChoirX </a> 
+can function in "Blocked" or "UnBlocked" mode.  In Blocked mode a program waits until it's previous sub-processes wait until they complete to run the next process.  In UnBlocked mode a program can run multiple sub-process simultaneously. Auto4n6 works in UnBlocked mode, meaning that multiple triage and memory parsing process can run at the same time.  This makes processing MUCH faster but imtroduces some complication.  All you really need to know is that Auto4n6 can run parse multiple memory dumps and triage collections at the same time.  That means that monitoring the console can be confusing as you see multiple processes executing at the same time.  Auto4n6 does not have any issues with this, but it can be confusing to watch the console as it displays messages across multiple parsing routines.
+
+## Syslog
+By default Auto4n6 logs to the console, to a unique individual log file (per processing routine) and to a local Syslog (127.0.0.1).  If you have an external Syslog, you can change the syslog parameters to point to your centralized syslog. If you prefer not to syslog the console message, this can be commented out.
+
+## The Memory Dump Processing Queue
+By default, Auto4n6 waits for Memory Dumps to appear in C:\Auto-Mem.  This can be changed in the script to point to a different directory of your choosing.
+
+## The Triage Collection Processing Queue
+By default, Auto4n6 waits for Triage collections to appear in C:\Auto-Col.  This can be changed in the script to point to a different directory of your choosing.
+
+## What is Where?
+Auto4n6 separates each processing run in a unique directory to ensure that one processing run doesn't step on another.  Since Auto4n6 is designed to be able to process at scale, multiple processing runs can be running simultaneously.  The need to understand which processing run is associated with which memory/triage collection becomes an important requirement.
+
+To address this Auto4n6 keeps two(2) running files:
+<ul>
+ <li>Auto4n6.csv - Shows which processing run is associated with which memory/triage collection input in CSV format</li>
+ <li>Auto4n6.HTML - Shows which processing run is associated with which memory/triage collection input in an HTML file</li>
+</ul>
+
+Using these files, an analyst can determine which input file is associate with which output directory.  To make this clearer, I recommend that memory dumps and Triage Collections be named uniquely to help in quicker identification of where the output is located.
+
+
 
 
