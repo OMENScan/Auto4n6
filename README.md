@@ -34,7 +34,7 @@ But
 was written to report on 
 <a href=https://github.com/OMENScan/AChoirX> AChoir(X) </a>
 collections.  As I ran into triage collection from other tools, I decided to change 
-<a href=https://github.com/OMENScan/AChoirX> AChoir(X) </a> to 
+<a href=https://github.com/OMENScan/AChReport> AChReport</a> to
 <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> 
 and allow it to report on nearly any type of triage collection.
 
@@ -59,4 +59,14 @@ to create an automated pipeline that processes both memory images and triage col
 Auto4n6 is currently in an Alpha (v0.01) state so it takes quite a bit of configuration to make it work.  That will change as I improve the software.  Essentially AChoirX runs several FOSS Forensic utilities and organizes them into a consistent set of outputs for the forensic analyst.  Below I will outline the tools it uses and how to configure them so that an anlyst can customize it to their own needs and preferences.
 
 # Step1: The AChoirX Scripts
+Auto4n6 currenlty consists of four (4) 
+<a href=https://github.com/OMENScan/AChoirX> AChoirX </a> scripts
+<ul>
+ <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/AChoir.ACQ> The main driver script</a></li>
+ <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/MemProcess.ACQ> The memory dump processing script</a></li>
+ <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/ColProcess.ACQ> The triage collection processing script</a></li>
+ <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/PlasoX.ACQ> The Plaso timelining script</a></li>
+</ul>
+
+
 
