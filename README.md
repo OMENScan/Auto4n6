@@ -112,6 +112,13 @@ C:\Auto4n6\Loki - These locations can be changed in the <b>MemProcess.ACQ</b> Sc
 Please note that both 
 <a href=https://www.volatilityfoundation.org/3> volatility</a> and 
 <a href=https://github.com/Neo23x0/Loki>LOKI</a>
-are highly configurable.  You can add, change or delete their parameters in the <b>MemProcess.ACQ</b> script as well as configure their own unique settings (i.e. add additional YARA rules to LOKI) to fully customize your Auto4n6 parsing environment.
+are highly configurable.  You can add, change or delete their parameters in the <b>MemProcess.ACQ</b> script as well as configure their own unique settings (i.e. add additional YARA rules to LOKI) to fully customize your Auto4n6 parsing and analysis environment.
 
+
+# Step 4: The Triage Collection Processing Script
+Documentation in progress...
+
+
+# Step 5: The Plaso Timeliner Processing Script
+Documentation in progress...
 
