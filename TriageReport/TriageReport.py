@@ -644,7 +644,7 @@ def main():
 
         if os.path.isfile(exeName):
             if os.path.isdir(dirname + Prefetc):
-                cmdexec = dirleft + "\\SYS\\WinPrefetchView.exe /folder " + dirname + Prefetc + " /scomma  " + dirtrge + "\\ WinPrefetchview.csv"
+                cmdexec = dirleft + "\\SYS\\WinPrefetchView.exe /folder " + dirname + Prefetc + " /scomma  " + dirtrge + "\\WinPrefetchview.csv"
                 returned_value = os.system(cmdexec)
             else:
                 print("[!] Prefetch Data Not Found in the Collection: " + dirname + Prefetc)
