@@ -1783,6 +1783,7 @@ def main():
         outfile.write("when the Scheduled Tasks service starts a task as a user.  Unfortunately this event is also logged in \n")
         outfile.write("situations where it doesn't seem necessary - For instance logging on interactively to a member server \n")
         outfile.write("with a domain account produces an instance of this event in addition to 2 instances of 4624.\n")
+        outfile.write("This EventID can help determine if a compromised account is being used to move laterally in the environment.\n")
         outfile.write("<font color=gray size=-1><br><br>Source: Parsed Security Event Log, TZ is UTC</font></font></i></p>\n")
 
         reccount = 0
