@@ -59,6 +59,7 @@
 #           .\SYS\\RBCmd.exe - Parses the Recycle Bin                 #
 #           .\SYS\\LECmd.exe - Parses LNK Files                       #
 #           .\Chainsaw\chainsaw_x86_64-pc-windows-msvc.exe            #
+#   v1.40 - Add Sec EventID 4648  - Logon Attemp with Explicit Creds  #
 ####################################################################### 
 import os
 import sys
@@ -514,6 +515,8 @@ def main():
         os.remove(dirtrge + "\\SysEvt7045.csv")
     if os.path.isfile(dirtrge + "\\SecEvt4698.csv"):
         os.remove(dirtrge + "\\SecEvt4698.csv")
+    if os.path.isfile(dirtrge + "\\SecEvt4648.csv"):
+        os.remove(dirtrge + "\\SecEvt4648.csv")
     if os.path.isfile(dirtrge + "\\RBin.dat"):
         os.remove(dirtrge + "\\RBin.dat")
     if os.path.isfile(dirtrge + "\\LNKFiles.csv"):
@@ -746,6 +749,10 @@ def main():
 
             cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, SourceName, EventCategoryName, Message FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4698\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4698.csv"
             returned_value = os.system(cmdexec)
+
+            cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 1, '|') as accountname, EXTRACT_TOKEN(strings, 2, '|') as domain, EXTRACT_TOKEN(strings, 5, '|') as usedaccount, EXTRACT_TOKEN(strings, 6, '|') as useddomain, EXTRACT_TOKEN(strings, 8, '|') as targetserver, EXTRACT_TOKEN(strings, 9, '|') as extradata, EXTRACT_TOKEN(strings, 11, '|') as procname, EXTRACT_TOKEN(strings, 12, '|') as sourceip FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4648\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4648.csv"
+            returned_value = os.system(cmdexec)
+
         else:
             print("[!] Error Parsing Event Log Entries...")
     else:
@@ -885,7 +892,8 @@ def main():
         outfile.write("<td width=5%> <a href=#ExeTemp>Temp</a> </td>\n")
 
     if RunAllAll == 1 or RunFaiLgn == 1:
-        outfile.write("<td width=5%> <a href=#Logins>FaiLgn</a> </th>\n")
+        outfile.write("<td width=5%> <a href=#Logins>FaiLgn</a> </td>\n")
+        outfile.write("<td width=5%> <a href=#AttLogin>AttLgn</a> </td>\n")
 
     if RunAllAll == 1 or RunSucRDP == 1:
         outfile.write("<td width=4%> <a href=#RDP>RDP</a> </th>\n")
@@ -1755,6 +1763,81 @@ def main():
                 outfile.write("<p>Records Found: " + str(reccount) + "</p>\n")
         else:
             outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+
+        outfile.write("</div>\n")
+
+
+
+        print("[+] Generating Attempted Explicit Logins Information...")
+        outfile.write("<a name=AttLogin></a>\n")
+        outfile.write("<input class=\"collapse\" id=\"id34\" type=\"checkbox\" checked>\n")
+        outfile.write("<label for=\"id34\">\n")
+        outfile.write("<H2>Attempted Explicit Logins</H2>\n")
+        outfile.write("</label><div><hr>\n")
+
+        outfile.write("<p><i><font color=firebrick>In this section, AChoir has parsed information about \n")
+        outfile.write("Explicit Credential Login Attempts.  These are EventID 4648 events in the Windows Security Event Log.\n")
+        outfile.write("These entries identify that a user connected to a server or ran a program locally using alternate credentials.\n")
+        outfile.write("For instance a user maps a drive to a server but specifies a different user's credentials or opens a \n")
+        outfile.write("shortcut under RunAs,  This event is also logged when a process logs on as a different account such as \n")
+        outfile.write("when the Scheduled Tasks service starts a task as a user.  Unfortunately this event is also logged in \n")
+        outfile.write("situations where it doesn't seem necessary - For instance logging on interactively to a member server \n")
+        outfile.write("with a domain account produces an instance of this event in addition to 2 instances of 4624.\n")
+        outfile.write("<font color=gray size=-1><br><br>Source: Parsed Security Event Log, TZ is UTC</font></font></i></p>\n")
+
+        reccount = 0
+        filname = dirtrge + "\\SecEvt4648.csv"
+
+        if os.path.isfile(filname):
+            outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
+            with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                for csvrow in csvread:
+                    if len(csvrow) > 7:
+                        if reccount == 0:
+                            tdtr = "th"
+                        else:
+                            tdtr = "td"
+
+                        # Is it in our IOC List?
+                        RowString = ' '.join(map(str, csvrow))
+
+                        IOCGotHit = 0 
+                        for IOCIndx, AnyIOC in enumerate(IOCList):
+                            if AnyIOC in RowString.lower():
+                                IOCount[IOCIndx] += 1
+                                IOCGotHit = 1
+
+                        if IOCGotHit == 1:
+                            PreIOC = " <b><font color=red>"
+                            PostIOC = "</font></b> "
+                        else: 
+                            PreIOC = " "
+                            PostIOC = " "
+
+                        if reccount == 0:
+                            outfile.write("<thead>\n")
+                            PostIOC += " (+/-)"
+
+                        outfile.write("<tr><" + tdtr + " width=15%>"+ PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
+                        outfile.write("<" + tdtr + " width=17%>"+ PreIOC + csvrow[2] + "\\" + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                        outfile.write("<" + tdtr + " width=18%>"+ PreIOC + csvrow[4] + "\\" + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                        outfile.write("<" + tdtr + " width=20%>"+ PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                        outfile.write("<" + tdtr + " width=10%>"+ PreIOC + csvrow[8] + PostIOC + "</" + tdtr + ">\n")
+                        outfile.write("<" + tdtr + " width=20%>"+ PreIOC + csvrow[7] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                        if reccount == 0:
+                            outfile.write("</thead><tbody>\n")
+
+                        reccount = reccount + 1
+
+            outfile.write("</tbody></table>\n")
+            os.remove(filname)
+
+            if reccount < 2:
+                outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+            else:
+                outfile.write("<p>Records Found: " + str(reccount) + "</p>\n")
 
         outfile.write("</div>\n")
 
