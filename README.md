@@ -44,8 +44,8 @@ As I began to use
 <a href=https://github.com/OMENScan/AChoirX/tree/master/ToolsBuiltWithAChoirX/Win-VoLoki>an automated Memory analysis tool</a> tying 
 <a href=https://www.volatilityfoundation.org/3> volatility</a> to 
 <a href=https://github.com/Neo23x0/Loki>LOKI</a>, or an 
-<a href=https://github.com/OMENScan/AChoirX/blob/master/Scripts/PlasoX.ACQ>automated Timeliner tool that runs Plaso</a>
-against a triage collection, I began to see that a completely automated and flexible forensic pipeline was possible.
+<a href=https://github.com/OMENScan/AChoirX/blob/master/Scripts/PlasoX.ACQ>automated Timeliner tool that runs 
+<a href=https://github.com/log2timeline/plaso> Plaso</a> against a triage collection, I began to see that a completely automated and flexible forensic pipeline was possible.
 
 This has brought me to this project: Auto4n6.
 
@@ -65,7 +65,7 @@ Auto4n6 currently consists of four (4)
  <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/AChoir.ACQ> The main driver script</a></li>
  <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/MemProcess.ACQ> The memory dump processing script</a></li>
  <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/ColProcess.ACQ> The triage collection processing script</a></li>
- <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/PlasoX.ACQ> The Plaso timelining script</a></li>
+ <li><a href=https://github.com/OMENScan/Auto4n6/blob/main/PlasoX.ACQ> The <a href=https://github.com/log2timeline/plaso> Plaso</a> timelining script</a></li>
 </ul>
 
 # Step 2: The Auto4n6 Main Driver Script
@@ -118,24 +118,31 @@ are highly configurable.  You can add, change or delete their parameters in the 
 # Step 4: The Triage Collection Processing Script
 The Triage Collection Processing script does several things:
 <ul>
- <li> Move the Triage Collection from the queue (the default is <b>C:\Auto-Col</b>) to a uniquely named acquisition directory</li>
- <li> Unzip the Triage Collection into a subdirectory called <b>Triage</b></li>
- <li> Run <b>TriageReport</b> against the Triage Collection</li>
- <li> The Triage Report will be written to a subdirectory called <b>TriageReport</b></li>
- <li> Run Plaso (Log2Timeline) against the Triae Collection to create a Super Timeline</li>
+ <li> Move the Triage Collection from the queue (the default is <b>C:\Auto-Col</b>) to a uniquely named acquisition sub-directory</li>
+ <li> Unzip the Triage Collection into a sub-directory called <b>Triage</b></li>
+ <li> Run <a href=https://github.com/OMENScan/triagereport>TriageReport</a> against the Triage Collection</li>
+ <li> The Triage Report will be written to a sub-directory called <b>TriageReport</b></li>
+ <li> Run <a href=https://github.com/log2timeline/plaso> Plaso</a> (Log2Timeline) against the Triage Collection to create a Super Timeline</li>
 </ul>
 
-For this to work properly, you will need to edit the TriageReport Confiquration file to point to all the artifacts in the collection. 
+For this to work properly, you will need to edit the 
+<a href=https://github.com/OMENScan/TriageReport> TriageReport</a> 
+Confiquration file to point to all the artifacts in the collection. 
 
-The Default Configuration File will be in <b>&Dir\TriageReport\AChReport.cfg</b> but thatis can be changed in the <b>ColProcess.ACQ</b> Script. 
+The Default Configuration File will be in <b>&Dir\TriageReport\AChReport.cfg</b> but that can be changed in the <b>ColProcess.ACQ</b> Script. 
+
+For <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> 
+to work properly Python 3 must be installed on the system.
 
 
-# Step 5: The Plaso Timeliner Processing Script
-After running <b>TriageReport</b> Auto4n6 will call the <b>PlasoX.ACQ</b> script, this script runs <b>Log2Timeline.exe</b> against the Triage Collection.
+# Step 5: The <a href=https://github.com/log2timeline/plaso> Plaso</a> Timeliner Processing Script
+After running <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> 
+Auto4n6 will call the <b>PlasoX.ACQ</b> script, this script runs 
+<a href=https://github.com/log2timeline/plaso> Plaso</a> <b>Log2Timeline.exe</b> against the Triage Collection.
 
-When Log2Timeline is complete, Auto4n6 will then run <b>psort.exe</b> to convert the timeline to CSV format.
+When <b>Log2Timeline</b> is complete, Auto4n6 will then run <b>psort.exe</b> to convert the timeline to CSV format.
 
-At this time, Auto4n6 will not fo any additional processing for the timeline.  It is up to the analyst to decide how to use the timeline for their analysis.
+At this time, Auto4n6 will not do any additional processing of the timeline.  It is up to the analyst to decide how to use the timeline for their analysis.
 
 # Step 6: ?
 This is Auto4n6 Version 0.01 - Additional functionality will added as I improve the system.
