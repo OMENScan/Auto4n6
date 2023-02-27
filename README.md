@@ -116,9 +116,27 @@ are highly configurable.  You can add, change or delete their parameters in the 
 
 
 # Step 4: The Triage Collection Processing Script
-Documentation in progress...
+The Triage Collection Processing script does several things:
+<ul>
+ <li> Move the Triage Collection from the queue (the default is <b>C:\Auto-Col</b>) to a uniquely named acquisition directory</li>
+ <li> Unzip the Triage Collection into a subdirectory called <b>Triage</b></li>
+ <li> Run <b>TriageReport</b> against the Triage Collection</li>
+ <li> The Triage Report will be written to a subdirectory called <b>TriageReport</b></li>
+ <li> Run Plaso (Log2Timeline) against the Triae Collection to create a Super Timeline</li>
+</ul>
+
+For this to work properly, you will need to edit the TriageReport Confiquration file to point to all the artifacts in the collection. 
+
+The Default Configuration File will be in <b>&Dir\TriageReport\AChReport.cfg</b> but thatis can be changed in the <b>ColProcess.ACQ</b> Script. 
 
 
 # Step 5: The Plaso Timeliner Processing Script
-Documentation in progress...
+After running <b>TriageReport</b> Auto4n6 will call the <b>PlasoX.ACQ</b> script, this script runs <b>Log2Timeline.exe</b> against the Triage Collection.
+
+When Log2Timeline is complete, Auto4n6 will then run <b>psort.exe</b> to convert the timeline to CSV format.
+
+At this time, Auto4n6 will not fo any additional processing for the timeline.  It is up to the analyst to decide how to use the timeline for their analysis.
+
+# Step 6: ?
+This is Auto4n6 Version 0.01 - Additional functionality will added as I improve the system.
 
