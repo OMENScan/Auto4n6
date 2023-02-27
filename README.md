@@ -137,7 +137,6 @@ For <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> to work p
  <li><a href=https://github.com/OMENScan/triagereport>TriageReport</a> must be installed in the <b>\TriageReport<b> sub-directory under the Auto4n6 Root Directory.
  <li><a href=https://www.microsoft.com/en-us/download/details.aspx?id=24659>Microsoft Log Parser</a> must be installed in the Auto4n6 Root Directory.
  <li><a href=https://github.com/WithSecureLabs/chainsaw>Chainsaw</a> must be installed in the <b>\Chainsaw<b> sub-directory under the Auto4n6 Root Directory.
- <li><a href=https://github.com/WithSecureLabs/chainsaw>Chainsaw</a> must be installed in the <b>\Chainsaw<b> sub-directory under the Auto4n6 Root Directory.
  <li><a href=https://github.com/keydet89/RegRipper3.0>RegRipper 3</a> must be installed in the <b>\RRV\RegRipper3.0-master<b> sub-directory under the Auto4n6 Root Directory.
  <li><a href=https://ericzimmerman.github.io/#!index.md>LECmd and SBECmd</a> must be installed in the <b>\Sys<b> sub-directory under the Auto4n6 Root Directory.
  <li><a href=https://www.nirsoft.net/utils/win_prefetch_view.html>WinPrefetchView</a> must be installed in the <b>\Sys<b> sub-directory under the Auto4n6 Root Directory.
