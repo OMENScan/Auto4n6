@@ -131,8 +131,19 @@ Confiquration file to point to all the artifacts in the collection.
 
 The Default Configuration File will be in <b>&Dir\TriageReport\AChReport.cfg</b> but that can be changed in the <b>ColProcess.ACQ</b> Script. 
 
-For <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> 
-to work properly Python 3 must be installed on the system.
+For <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> to work properly the following setup is necessary:
+<ul>
+ <li>Python 3 must be installed on the system.</li>
+ <li><a href=https://github.com/OMENScan/triagereport>TriageReport</a> must be installed in the <b>\TriageReport<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=https://www.microsoft.com/en-us/download/details.aspx?id=24659>Microsoft Log Parser</a> must be installed in the Auto4n6 Root Directory.
+ <li><a href=https://github.com/WithSecureLabs/chainsaw>Chainsaw</a> must be installed in the <b>\Chainsaw<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=https://github.com/WithSecureLabs/chainsaw>Chainsaw</a> must be installed in the <b>\Chainsaw<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=https://github.com/keydet89/RegRipper3.0>RegRipper 3</a> must be installed in the <b>\RRV\RegRipper3.0-master<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=https://ericzimmerman.github.io/#!index.md>LECmd and SBECmd</a> must be installed in the <b>\Sys<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=https://www.nirsoft.net/utils/win_prefetch_view.html>WinPrefetchView</a> must be installed in the <b>\Sys<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=https://www.7-zip.org/download.html>Standalone 7-Zip</a> must be installed in the <b>\Utils\7z<b> sub-directory under the Auto4n6 Root Directory.
+ <li><a href=http://malware-hunters.net/wp-content/downloads/MFTDump_V.1.3.0.zip>MFTDump</a> must be installed in the <b>\DSK<b> sub-directory under the Auto4n6 Root Directory.
+</ul>
 
 
 # Step 5: The <a href=https://github.com/log2timeline/plaso> Plaso</a> Timeliner Processing Script
@@ -141,6 +152,8 @@ Auto4n6 will call the <b>PlasoX.ACQ</b> script, this script runs
 <a href=https://github.com/log2timeline/plaso> Plaso</a> <b>Log2Timeline.exe</b> against the Triage Collection.
 
 When <b>Log2Timeline</b> is complete, Auto4n6 will then run <b>psort.exe</b> to convert the timeline to CSV format.
+
+Auto4n6 expects <a href=https://github.com/log2timeline/plaso> Plaso</a> to be installed in the <b>\Plaso<b> sub-directory under the Auto4n6 Root Directory. 
 
 At this time, Auto4n6 will not do any additional processing of the timeline.  It is up to the analyst to decide how to use the timeline for their analysis.
 
