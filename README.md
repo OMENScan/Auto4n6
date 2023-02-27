@@ -152,7 +152,7 @@ Auto4n6 will call the <b>PlasoX.ACQ</b> script, this script runs
 
 When <b>Log2Timeline</b> is complete, Auto4n6 will then run <b>psort.exe</b> to convert the timeline to CSV format.
 
-Auto4n6 expects <a href=https://github.com/log2timeline/plaso> Plaso</a> to be installed in the <b>\Plaso<b> sub-directory under the Auto4n6 Root Directory. 
+Auto4n6 expects <a href=https://github.com/log2timeline/plaso> Plaso</a> to be installed in the <b>\Plaso</b> sub-directory under the Auto4n6 Root Directory. 
 
 At this time, Auto4n6 will not do any additional processing of the timeline.  It is up to the analyst to decide how to use the timeline for their analysis.
 
