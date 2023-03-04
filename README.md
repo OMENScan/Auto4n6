@@ -128,7 +128,7 @@ The Triage Collection Processing script does several things:
 Since Triage collections can be organized in many different ways, the first thing that you will need to determine is how to unzip the collection.  The <b>ColProcess.ACQ</b> script can be modified to Unzip the collection into the directories that will then be parsed and processed.  The default scripts were designed, and function with the 
 <a href=https://www.blueteamvillage.org/>Blue Team Village</a> 
 BTV5 (DEF CON 30) triage collections from 
-<a href=https://media.blueteamvillage.org/DC30/Obsidian/> Project Obsidian</a>.
+<a href=https://www.blueteamvillage.org/programs/project-obsidian/> Project Obsidian</a>.
 These can be found on the 
 <a href=https://media.blueteamvillage.org/DC30/Obsidian/>BTV Media Server</a>.
 
