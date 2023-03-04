@@ -71,7 +71,7 @@ Auto4n6 currently consists of four (4)
 # Step 2: The Auto4n6 Main Driver Script
 First it is important to note that 
 <a href=https://github.com/OMENScan/AChoirX> AChoirX </a> 
-can function in "Blocked" or "UnBlocked" mode.  In Blocked mode a program waits until it's previous sub-processes wait until they complete to run the next process.  In UnBlocked mode a program can run multiple sub-process simultaneously. Auto4n6 works in UnBlocked mode, meaning that multiple triage and memory parsing process can run at the same time.  This makes processing MUCH faster but imtroduces some complication.  All you really need to know is that Auto4n6 can run parse multiple memory dumps and triage collections at the same time.  That means that monitoring the console can be confusing as you see multiple processes executing at the same time.  Auto4n6 does not have any issues with this, but it can be confusing to watch the console as it displays messages across multiple parsing routines.
+can function in "Blocked" or "UnBlocked" mode.  In Blocked mode a program waits until it's previous sub-processes complete to run the next process.  In UnBlocked mode a program can run multiple sub-process simultaneously. Auto4n6 works in UnBlocked mode, meaning that multiple triage and memory parsing process can run at the same time.  This makes processing MUCH faster but introduces some complication.  All you really need to know is that Auto4n6 can run parse multiple memory dumps and triage collections at the same time.  That means that monitoring the console can be confusing as you see multiple processes executing at the same time.  Auto4n6 does not have any issues with this, but it can be confusing to watch the console as it displays messages across multiple simultaneous parsing routines.
 
 ## Syslog
 By default Auto4n6 logs to the console, to a unique individual log file (per processing routine) and to a local Syslog (<b>127.0.0.1</b>).  If you have an external Syslog, you can change the syslog parameters to point to your centralized syslog. If you prefer not to syslog the console message, this can be commented out.
@@ -125,9 +125,15 @@ The Triage Collection Processing script does several things:
  <li> Run <a href=https://github.com/log2timeline/plaso> Plaso</a> (Log2Timeline) against the Triage Collection to create a Super Timeline</li>
 </ul>
 
-For this to work properly, you will need to edit the 
+Since Triage collections can be organized in many different ways, the first thing that you will need to determine is how to unzip the collection.  The <b>ColProcess.ACQ</b> script can be modified to Unzip the collection into the directories that will then be parsed and processed.  The default scripts were designed, and function with the <a href=https://www.blueteamvillage.org/>Blue Team Village</b> BTV5 (DEF CON 30) triage collections from <a href=https://media.blueteamvillage.org/DC30/Obsidian/> Project Obsidian</b>.  These can be found on the <a href=https://media.blueteamvillage.org/DC30/Obsidian/>BTV Media Server</a>.
+
+Once Auto4n6 is setup, these
+<a href=https://media.blueteamvillage.org/DC30/Obsidian/>Triage Collections</a> can be used to test it.  They should work without any further modifications.
+
+When setting up Auto4n6 for your own individual collections, you will need to edit the 
 <a href=https://github.com/OMENScan/TriageReport> TriageReport</a> 
-Confiquration file to point to all the artifacts in the collection. 
+Confiquration file to point to all the unzipped artifacts in the collection.  When testing this with the  
+<a href=https://media.blueteamvillage.org/DC30/Obsidian/>BTV Triage Collections</a> no modifications should be necessary.
 
 The Default Configuration File will be in <b>&Dir\TriageReport\AChReport.cfg</b> but that can be changed in the <b>ColProcess.ACQ</b> Script. 
 
