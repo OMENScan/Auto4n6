@@ -125,7 +125,12 @@ The Triage Collection Processing script does several things:
  <li> Run <a href=https://github.com/log2timeline/plaso> Plaso</a> (Log2Timeline) against the Triage Collection to create a Super Timeline</li>
 </ul>
 
-Since Triage collections can be organized in many different ways, the first thing that you will need to determine is how to unzip the collection.  The <b>ColProcess.ACQ</b> script can be modified to Unzip the collection into the directories that will then be parsed and processed.  The default scripts were designed, and function with the <a href=https://www.blueteamvillage.org/>Blue Team Village</b> BTV5 (DEF CON 30) triage collections from <a href=https://media.blueteamvillage.org/DC30/Obsidian/> Project Obsidian</b>.  These can be found on the <a href=https://media.blueteamvillage.org/DC30/Obsidian/>BTV Media Server</a>.
+Since Triage collections can be organized in many different ways, the first thing that you will need to determine is how to unzip the collection.  The <b>ColProcess.ACQ</b> script can be modified to Unzip the collection into the directories that will then be parsed and processed.  The default scripts were designed, and function with the 
+<a href=https://www.blueteamvillage.org/>Blue Team Village</a> 
+BTV5 (DEF CON 30) triage collections from 
+<a href=https://media.blueteamvillage.org/DC30/Obsidian/> Project Obsidian</a>.
+These can be found on the 
+<a href=https://media.blueteamvillage.org/DC30/Obsidian/>BTV Media Server</a>.
 
 Once Auto4n6 is setup, these
 <a href=https://media.blueteamvillage.org/DC30/Obsidian/>Triage Collections</a> can be used to test it.  They should work without any further modifications.
