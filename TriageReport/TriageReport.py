@@ -4115,6 +4115,9 @@ def main():
                             if "defender" in csvrow[1].lower() and "defender" not in csvrow[3].lower():
                                 continue
 
+                            if "sysmon" in csvrow[1].lower() and "sysmon" not in csvrow[3].lower():
+                                continue
+
                             ###########################################################################
                             # Sigma Rules - Sanity check detection end                                #
                             ###########################################################################
