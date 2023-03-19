@@ -4118,6 +4118,9 @@ def main():
                             if "sysmon" in csvrow[1].lower() and "sysmon" not in csvrow[3].lower():
                                 continue
 
+                            if "file was not allowed to run" in csvrow[1].lower() and "applocker" not in csvrow[3].lower():
+                                continue
+
                             ###########################################################################
                             # Sigma Rules - Sanity check detection end                                #
                             ###########################################################################
