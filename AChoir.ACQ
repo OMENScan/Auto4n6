@@ -1,5 +1,5 @@
 *******************************************************
-* Auto4n6: v0.01                                      *
+* Auto4n6: v0.02                                      *
 *  This is a series of AchoirX scripts and forensics  *
 *   parsing and reporting programs that will ingest:  *
 *   - Triage Collections                              *
@@ -18,7 +18,7 @@ LBL:Start
 CN0:0
 SAY:[+] Checking for new Memory Dumps to Process.
 FOR:C:\Auto-Mem\*
-EXA:A-AChoirx.exe /ini:MemProcess.ACQ "/VR0:&For" "/VR1:&Fnm" "/Nam:&Fnm"
+EXA:A-AChoirx.exe /ini:MemProcess.ACQ "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
 *******************************************************
 * Did we find Anything?                               *
 *******************************************************
@@ -29,7 +29,7 @@ NEQ:&VR1 --
 END:
 SAY:[+] Checking for new Triage Collections to Process.
 FOR:C:\Auto-Col\*
-EXA:A-AChoirx.exe /ini:ColProcess.ACQ  "/VR0:&For" "/VR1:&Fnm" "/Nam:&Fnm"
+EXA:A-AChoirx.exe /ini:ColProcess.ACQ  "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
 *******************************************************
 * Did we find Anything?                               *
 *******************************************************
@@ -56,4 +56,9 @@ N>>:&CN0 0
  Opn:Semaph.ore
 END:
 SLP:35
+CKY:Shut.Down
+ SAY:[+] Shutdown Semaphore File (Shut.Down) Detected...  Shutting Down...
+ SAY:[+] Note: Be sure to delete the Shut.Down File before restarting...
+ BYE:
+END:
 JMP:Start
