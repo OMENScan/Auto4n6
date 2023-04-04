@@ -1,5 +1,5 @@
 *******************************************************
-* Auto4n6: v0.02                                      *
+* Auto4n6: v0.03                                      *
 *  This is a series of AchoirX scripts and forensics  *
 *   parsing and reporting programs that will ingest:  *
 *   - Triage Collections                              *
@@ -15,9 +15,12 @@ SET:SyslogS:127.0.0.1
 SET:SyslogP=5514
 SET:SyslogL=none
 LBL:Start
+SYS:cmd.exe /c Color 07
 CN0:0
 SAY:[+] Checking for new Memory Dumps to Process.
 FOR:C:\Auto-Mem\*
+FLT:MemDone.dat
+SET:Filter=excl full
 EXA:A-AChoirx.exe /ini:MemProcess.ACQ "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
 *******************************************************
 * Did we find Anything?                               *
@@ -29,6 +32,7 @@ NEQ:&VR1 --
 END:
 SAY:[+] Checking for new Triage Collections to Process.
 FOR:C:\Auto-Col\*
+FLT:ColDone.dat
 EXA:A-AChoirx.exe /ini:ColProcess.ACQ  "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
 *******************************************************
 * Did we find Anything?                               *
@@ -49,6 +53,7 @@ N>>:&CN0 0
  Out:<body><h2>Auto4n6 Parsing Report</h2>
  Out:<p>Below is an Index of the Auto4n6 Runs</p>
  Out:<Center><table border=2 width=98% >
+ FLT:None
  Lst:Auto4n6.csv
  Out:<tr><td>Collection Name</td> <td>Collection</td><td>Date - Time</td></tr>
  Out:<tr><td>&ls0</td> <td>&ls1</td><td>&ls2</td></tr>

@@ -1,8 +1,15 @@
 *******************************************************
-* Auto4n6: v0.01                                      *
+* Auto4n6: v0.03                                      *
 *  Memory Dump Processor                              *
 * Uses:                                               *
 *  AChoirX, Volatility, and Loki Script               *
+*******************************************************
+* Check Previous Run.  MUST BE BEFORE ANY PROCESSING  *
+*******************************************************
+CKY:&Acq
+ SAY:[+] Processing Directory Already Exists: &Acq
+ BYE:
+END:
 *******************************************************
 *   Setup Syslog                                      *
 *******************************************************
@@ -10,22 +17,26 @@ SET:CopyPath=Part
 SET:SyslogS:127.0.0.1
 SET:SyslogP=5514
 SET:SyslogL=min
+SYS:cmd.exe /c Color 07
 SAY:[+] Logging This Processing Run...
 OPN:&Dir\Auto4n6.csv
 OUT:"&Acn","&VR1","&Tim"
 SAY:[+] Processing Memory Dump: &VR1 (Full Path: &VR0)
-CKY:&Acq
- SAY:[+] Processing Directory Already Exists: &Acq
- BYE:
-END:
 ACQ:\MemDump
+*******************************************************
+* Log it to Prevent Running it again                  *
+*******************************************************
+OPN:MemDone.dat
+OUT:&VR0
 *******************************************************
 * If the Move Didnt work, its probably still writing  *
 * - Try 5 Times, Then Exit out                        *
 *******************************************************
 CN0:0
 LBL:CopyMem
-SYS:cmd.exe /c Move /Y "&VR0" "&Acq"
+SET:CopyPath=None
+CPY:"&VR0" "&Acq"
+SET:CopyPath=Part
 CKN:&Acq\&VR1
  CN0:++
  N>>:&CN0 5

@@ -1,4 +1,4 @@
-# Auto4n6 (v0.01)
+# Auto4n6 (v0.03)
 Auto4n6 is a set of 
 <a href=https://github.com/OMENScan/AChoirX> AChoirX </a>
 Scripts coupled with several other Open Source forensics programs that automate the parsing and reporting of both Memory dumps and Forensic Triage collections.
@@ -56,7 +56,7 @@ and several other FOSS forensic tools (Including
 to create an automated pipeline that processes both memory images and triage collections.  A memory dump or triage collection is simply copied into a directory and Auto4n6 takes over, parsing and analyzing the data to create a comprehsive analysis and reporting pipeline.
 
 # How does it work?
-Auto4n6 is currently in an Alpha (v0.01) state so it takes quite a bit of configuration to make it work.  That will change as I improve the software.  Essentially AChoirX runs several FOSS Forensic utilities and organizes them into a consistent set of outputs for the forensic analyst.  Below I will outline the tools it uses and how to configure them so that an anlyst can customize it to their own needs and preferences.
+Auto4n6 is currently in an Alpha (v0.03) state so it takes quite a bit of configuration to make it work.  That will change as I improve the software.  Essentially AChoirX runs several FOSS Forensic utilities and organizes them into a consistent set of outputs for the forensic analyst.  Below I will outline the tools it uses and how to configure them so that an anlyst can customize it to their own needs and preferences.
 
 # Step 1: The AChoirX Scripts
 Auto4n6 currently consists of four (4) 
@@ -94,7 +94,7 @@ To address this Auto4n6 keeps two(2) running files:
 Using these files, an analyst can determine which input file is associate with which output directory.  To make this clearer, I recommend that memory dumps and Triage Collections be named uniquely to help in quicker matching of where the output is located.
 
 # Step 3: The Memory Dump Processing Script
-Once Auto4n6 detects a file in the Memory Dump directory (queue), it will create a new Auto4n6 directory and move the memory dump to the new directory.  This directory can be seen in the Main Driver script, and the default is <b>C:\Auto-Mem</b>.
+Once Auto4n6 detects a file in the Memory Dump directory (queue), it will create a new Auto4n6 directory and copy the memory dump to the new directory.  This directory can be seen in the Main Driver script, and the default is <b>C:\Auto-Mem</b>.  Auto4n6 will remember the memory dump file it has processed and will only process it once.  The list of processed memory dump files can be found in the <b>MemDone.dat</b> file. 
 
 The memory dump processing script will then run several 
 <a href=https://www.volatilityfoundation.org/3> volatility</a>
@@ -118,12 +118,14 @@ are highly configurable.  You can add, change or delete their parameters in the 
 # Step 4: The Triage Collection Processing Script
 The Triage Collection Processing script does several things:
 <ul>
- <li> Move the Triage Collection from the queue (the default is <b>C:\Auto-Col</b>) to a uniquely named acquisition sub-directory</li>
+ <li> Copy the Triage Collection from the queue (the default is <b>C:\Auto-Col</b>) to a uniquely named acquisition sub-directory</li>
  <li> Unzip the Triage Collection into a sub-directory called <b>Triage</b></li>
  <li> Run <a href=https://github.com/OMENScan/triagereport>TriageReport</a> against the Triage Collection</li>
  <li> The Triage Report will be written to a sub-directory called <b>TriageReport</b></li>
  <li> Run <a href=https://github.com/log2timeline/plaso> Plaso</a> (Log2Timeline) against the Triage Collection to create a Super Timeline</li>
 </ul>
+
+Auto4n6 will remember each triage collection file it has processed and will only process it once.  The list of processed triage collection files can be found in the <b>ColDone.dat</b> file. 
 
 Since Triage collections can be organized in many different ways, the first thing that you will need to determine is how to unzip the collection.  The <b>ColProcess.ACQ</b> script can be modified to Unzip the collection into the directories that will then be parsed and processed.  The default scripts were designed, and function with the 
 <a href=https://www.blueteamvillage.org/>Blue Team Village</a> 

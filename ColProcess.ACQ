@@ -1,8 +1,15 @@
 *******************************************************
-* Auto4n6: v0.01                                      *
+* Auto4n6: v0.03                                      *
 *  Triage Collection Processor                        *
 * Uses:                                               *
 *  AChoirX, TriageReport                              *
+*******************************************************
+* Check Previous Run.  MUST BE BEFORE ANY PROCESSING  *
+*******************************************************
+CKY:&Acq
+ SAY:[+] Processing Directory Already Exists: &Acq
+ BYE:
+END:
 *******************************************************
 *   Setup Syslog                                      *
 *******************************************************
@@ -14,19 +21,22 @@ SAY:[+] Logging This Processing Run...
 OPN:&Dir\Auto4n6.csv
 OUT:"&Acn","&VR1","&Tim"
 SAY:[+] Processing Triage Collection: &VR1 (Full Path: &VR0)
-CKY:&Acq
- SAY:[+] Processing Directory Already Exists: &Acq
- BYE:
-END:
 ACQ:\Triage
+*******************************************************
+* Log it to Prevent Running it again                  *
+*******************************************************
+OPN:ColDone.dat
+OUT:&VR0
 *******************************************************
 * If the Move Didnt work, its probably still writing  *
 * - Try 5 Times, Then Exit out                        *
 *******************************************************
 CN0:0
 LBL:CopyCol
-SAY:[+] Moving Collection: &VR1
-SYS:cmd.exe /c Move /Y "&VR0" "&Acq"
+SAY:[+] Copying Collection: &VR1
+SET:CopyPath=None
+CPY:"&VR0" "&Acq"
+SET:CopyPath=Part
 CKN:&Acq\&VR1
  CN0:++
  N>>:&CN0 5
