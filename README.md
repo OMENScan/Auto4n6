@@ -169,6 +169,6 @@ Auto4n6 expects <a href=https://github.com/log2timeline/plaso> Plaso</a> to be i
 
 At this time, Auto4n6 will not do any additional processing of the timeline.  It is up to the analyst to decide how to use the timeline for their analysis.
 
-# Step 6: ?
-This is Auto4n6 Version 0.01 - Additional functionality will added as I improve the system.
+# Ending Auto4n6:
+Auto4n6 will happily run indefinately.  To signal Auto4n6 to stop, simply create a file called <b>Shut.Down</b> in the Auto4n6 root folder.  This will signal Auto4n6 to exit the main script. <b>IMPORTANT NOTE:</b> Delete the <b>Shut.Down</b> file before restarting Auto4n6 to make sure it runs without exiting.
 

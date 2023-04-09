@@ -53,14 +53,19 @@
 #           Change Location of directories to be unique               #
 #         - Removing the requirement for AChoirX to be installed:     #
 #           REquires the following programs:                          #
-#           .\LoParser.exe - Log Parser                               #
+#           .\LogParser.exe - Log Parser                              #
 #           .\Dsk\MFTDump.exe - Parses the MFT                        #
+#           OR                                                        #
+#           .\Dsk\MFTECmd.exe - Parses the MFT                        #
 #           .\Sys\WinpPefetchView.exe  - Parses the Prefetch Files    #
 #           .\SYS\\RBCmd.exe - Parses the Recycle Bin                 #
 #           .\SYS\\LECmd.exe - Parses LNK Files                       #
 #           .\Chainsaw\chainsaw_x86_64-pc-windows-msvc.exe            #
 #   v1.40 - Add Sec EventID 4648  - Logon Attemp with Explicit Creds  #
 #   v1.41 - Temporary Chainsaw Sanity Check code.                     #
+#   v1.42 - Add MFTECmd as optional MFT Parser                        #
+#           TriageReport will use whichever parser is available       #
+#         - Add Scan of the Entire MFT for IOCs                       #
 ####################################################################### 
 import os
 import sys
@@ -502,6 +507,12 @@ def main():
         os.remove(dirtrge + "\\TZInfo.dat")
     if os.path.isfile(dirtrge + "\\MFTDump.csv"):
         os.remove(dirtrge + "\\MFTDump.csv")
+    if os.path.isfile(dirtrge + "\\MFTDelt.csv"):
+        os.remove(dirtrge + "\\MFTDelt.csv")
+    if os.path.isfile(dirtrge + "\\MFTActv.csv"):
+        os.remove(dirtrge + "\\MFTActv.csv")
+    if os.path.isfile(dirtrge + "\\MFTIOCs.csv"):
+         os.remove(dirtrge + "\\MFTIOCs.csv")
     if os.path.isfile(dirtrge + "\\MFTDump.log"):
         os.remove(dirtrge + "\\MFTDump.log")
     if os.path.isfile(dirtrge + "\\RDPGood.csv"):
@@ -786,7 +797,23 @@ def main():
         MFTFound = 0
 
         exeName = dirleft + "\\DSK\\MFTDump.exe"
+        exeNam1 = dirleft + "\\DSK\\MFTECmd.exe"
         if os.path.isfile(exeName):
+            ###########################################################################
+            # Use Malware Hunters MFT Parser (1) - Setup Columns                      #
+            ###########################################################################
+            iMFTParsr = 1
+            iMFTDelt = 1
+            iMFTSize = 10
+            iMFTPath = 13
+            iMFTFile = 4
+            iMFTCrea = 6
+            iMFTAccs = 7
+            iMFTModf = 8
+            MFTActFlag = "0"
+            MFTDelFlag = "1"
+            MFTDelim = '\t'
+
             MFTName = dirname + "\\RawData\\$MFT"
             if os.path.isfile(MFTName):
                 cmdexec = dirleft + "\\DSK\\MFTDump.exe /l /d /v --output=" + dirtrge + "\\MFTDump.csv " + MFTName 
@@ -799,12 +826,82 @@ def main():
                 returned_value = os.system(cmdexec)
                 MFTFound = 1
 
-            if MFTFound == 0:
-                print("[!] Error Parsing MFT (No MFT Found)...")
-                SrcMFT = 0
+        elif os.path.isfile(exeNam1):
+            ###########################################################################
+            # Use Eric Zimmerman MFT Parser (2) - Setup Columns                       #
+            ###########################################################################
+            iMFTParsr = 2
+            iMFTDelt = 2
+            iMFTSize = 8
+            iMFTPath = 5
+            iMFTFile = 6
+            iMFTCrea = 19
+            iMFTAccs = 25
+            iMFTModf = 21
+            MFTActFlag = "True"
+            MFTDelFlag = "False"
+            MFTDelim = ','
+
+            MFTName = dirname + "\\RawData\\$MFT"
+            if os.path.isfile(MFTName):
+                cmdexec = dirleft + "\\DSK\\MFTECmd.exe -f " + MFTName + " --csv " + dirtrge + " --csvf MFTDump.csv"
+                returned_value = os.system(cmdexec)
+                MFTFound = 1
+
+            MFTName = dirname + MFTFile
+            if os.path.isfile(MFTName):
+                cmdexec = dirleft + "\\DSK\\MFTECmd.exe -f " + MFTName + " --csv " + dirtrge + " --csvf MFTDump.csv"
+                returned_value = os.system(cmdexec)
+                MFTFound = 1
+
         else:
             print("[+] MFTDump Parser Not Found...")
             SrcMFT = 0
+
+
+        if MFTFound == 0:
+            print("[!] Error Parsing MFT (No MFT Found)...")
+            SrcMFT = 0
+        else:
+            ###########################################################################
+            # Normalize the MFTDump.csv into MFTDelt.csv and MFTActv.csv              #
+            ###########################################################################
+            MFTDelfile = open(dirtrge + "\\MFTDelt.csv", "w", encoding='utf8', errors="replace")
+            MFTActfile = open(dirtrge + "\\MFTActv.csv", "w", encoding='utf8', errors="replace")
+            MFTIOCfile = open(dirtrge + "\\MFTIOCs.csv", "w", encoding='utf8', errors="replace")
+
+            with open(dirtrge + "\\MFTDump.csv", 'r', encoding='utf8', errors="replace") as csvfile:
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=MFTDelim)
+                for csvrow in csvread:
+                    if len(csvrow) > 13:
+                        # Normalized Full Path
+                        if iMFTParsr == 2:
+                            MFTDisplayPath = csvrow[iMFTPath] + "\\" + csvrow[iMFTFile]
+                        else:
+                            MFTDisplayPath = csvrow[iMFTPath]
+
+                        # Initialize Record
+                        MFTCheckIOCRec = "9, Unknown Record, 0, 0, 0, 0"
+
+                        # Deleted File
+                        if csvrow[iMFTDelt] == MFTDelFlag:
+                            MFTCheckIOCRec = "\"1\",\"" + MFTDisplayPath + "\",\"" + csvrow[iMFTCrea] + "\",\"" + csvrow[iMFTAccs] + "\",\"" + csvrow[iMFTModf] + "\",\"" + csvrow[iMFTSize] + "\"\n"
+                            MFTDelfile.write(MFTCheckIOCRec)
+
+                        # Not a Deleted File
+                        if csvrow[iMFTDelt] == MFTActFlag:
+                            MFTCheckIOCRec = "\"0\",\"" + MFTDisplayPath + "\",\"" + csvrow[iMFTCrea] + "\",\"" + csvrow[iMFTAccs] + "\",\"" + csvrow[iMFTModf] + "\",\"" + csvrow[iMFTSize] + "\"\n"
+                            MFTActfile.write(MFTCheckIOCRec)
+
+                        # Check for IOC Matches in the MFT
+                        for IOCIndx, AnyIOC in enumerate(IOCList):
+                            if AnyIOC.lower() in MFTCheckIOCRec.lower():
+                                IOCount[IOCIndx] += 1
+                                MFTIOCfile.write(MFTCheckIOCRec)
+
+            MFTDelfile.close()
+            MFTActfile.close()
+            MFTIOCfile.close()
     else:
         print("[+] Bypass Parsing $MFT...")
 
@@ -872,7 +969,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.2)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.42)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -1117,7 +1214,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunSmlDel == 1) and SrcMFT == 1:
         print("[+] Generating Small Deleted Files $MFT Information...")
-        filname = dirtrge + "\\MFTDump.csv"
+        filname = dirtrge + "\\MFTDelt.csv"
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1142,37 +1239,35 @@ def main():
             outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
 
             with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
-                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter='\t')
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
                 for csvrow in csvread:
-                    if len(csvrow) > 13:
-                        # Is it a Deleted File
-                        if csvrow[1] == "1":
-                            FileSize = csvrow[10]
-                            if (FileSize.isdigit and len(FileSize) > 1):
-                                nFileSize = int(FileSize)
-                                if (nFileSize > 1000000 and nFileSize < 10000000):
+                    if len(csvrow) > 5:
+                        FileSize = csvrow[5]
+                        if (FileSize.isdigit and len(FileSize) > 1):
+                            nFileSize = int(FileSize)
+                            if (nFileSize > 1000000 and nFileSize < 10000000):
 
-                                    RowString = ' '.join(map(str, csvrow))
+                                RowString = ' '.join(map(str, csvrow))
 
-                                    IOCGotHit = 0 
-                                    for IOCIndx, AnyIOC in enumerate(IOCList):
-                                        if AnyIOC in RowString.lower():
-                                            IOCount[IOCIndx] += 1
-                                            IOCGotHit = 1
+                                IOCGotHit = 0 
+                                for IOCIndx, AnyIOC in enumerate(IOCList):
+                                    if AnyIOC in RowString.lower():
+                                        IOCount[IOCIndx] += 1
+                                        IOCGotHit = 1
 
-                                    if IOCGotHit == 1:
-                                        PreIOC = " <b><font color=red>"
-                                        PostIOC = "</font></b> "
-                                    else: 
-                                        PreIOC = " "
-                                        PostIOC = " "
+                                if IOCGotHit == 1:
+                                    PreIOC = " <b><font color=red>"
+                                    PostIOC = "</font></b> "
+                                else: 
+                                    PreIOC = " "
+                                    PostIOC = " "
 
-                                    outfile.write("<tr><td width=40%>" + PreIOC + csvrow[13] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[6] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[7] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[8] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
-                                    reccount = reccount + 1
+                                outfile.write("<tr><td width=40%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                                reccount = reccount + 1
 
             outfile.write("</tbody></table>\n")
             # csvfile.close()
@@ -1195,7 +1290,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunMedDel == 1) and SrcMFT == 1:
         print("[+] Generating Medium Deleted Files $MFT Information...")
-        filname = dirtrge + "\\MFTDump.csv"
+        filname = dirtrge + "\\MFTDelt.csv"
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1219,37 +1314,35 @@ def main():
             outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
 
             with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
-                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter='\t')
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
                 for csvrow in csvread:
-                    if len(csvrow) > 13:
-                        # Is it a Deleted File
-                        if csvrow[1] == "1":
-                            FileSize = csvrow[10]
-                            if (FileSize.isdigit and len(FileSize) > 1):
-                                nFileSize = int(FileSize)
-                                if (nFileSize > 10000000 and nFileSize < 100000000):
+                    if len(csvrow) > 5:
+                        FileSize = csvrow[5]
+                        if (FileSize.isdigit and len(FileSize) > 1):
+                            nFileSize = int(FileSize)
+                            if (nFileSize > 10000000 and nFileSize < 100000000):
 
-                                    RowString = ' '.join(map(str, csvrow))
+                                RowString = ' '.join(map(str, csvrow))
 
-                                    IOCGotHit = 0 
-                                    for IOCIndx, AnyIOC in enumerate(IOCList):
-                                        if AnyIOC in RowString.lower():
-                                            IOCount[IOCIndx] += 1
-                                            IOCGotHit = 1
+                                IOCGotHit = 0 
+                                for IOCIndx, AnyIOC in enumerate(IOCList):
+                                    if AnyIOC in RowString.lower():
+                                        IOCount[IOCIndx] += 1
+                                        IOCGotHit = 1
 
-                                    if IOCGotHit == 1:
-                                        PreIOC = " <b><font color=red>"
-                                        PostIOC = "</font></b> "
-                                    else: 
-                                        PreIOC = " "
-                                        PostIOC = " "
+                                if IOCGotHit == 1:
+                                    PreIOC = " <b><font color=red>"
+                                    PostIOC = "</font></b> "
+                                else: 
+                                    PreIOC = " "
+                                    PostIOC = " "
 
-                                    outfile.write("<tr><td width=40%>" + PreIOC + csvrow[13] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[6] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[7] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[8] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
-                                    reccount = reccount + 1
+                                outfile.write("<tr><td width=40%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                                reccount = reccount + 1
 
             outfile.write("</tbody></table>\n")
             # csvfile.close()
@@ -1272,7 +1365,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunLrgDel == 1) and SrcMFT == 1:
         print("[+] Generating Large Deleted Files $MFT Information...")
-        filname = dirtrge + "\\MFTDump.csv"
+        filname = dirtrge + "\\MFTDelt.csv"
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1296,37 +1389,35 @@ def main():
             outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
 
             with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
-                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter='\t')
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
                 for csvrow in csvread:
-                    if len(csvrow) > 13:
-                        # Is it a Deleted File
-                        if csvrow[1] == "1":
-                            FileSize = csvrow[10]
-                            if (FileSize.isdigit and len(FileSize) > 1):
-                                nFileSize = int(FileSize)
-                                if nFileSize > 100000000:
+                    if len(csvrow) > 5:
+                        FileSize = csvrow[5]
+                        if (FileSize.isdigit and len(FileSize) > 1):
+                            nFileSize = int(FileSize)
+                            if nFileSize > 100000000:
 
-                                    RowString = ' '.join(map(str, csvrow))
+                                RowString = ' '.join(map(str, csvrow))
 
-                                    IOCGotHit = 0 
-                                    for IOCIndx, AnyIOC in enumerate(IOCList):
-                                        if AnyIOC in RowString.lower():
-                                            IOCount[IOCIndx] += 1
-                                            IOCGotHit = 1
+                                IOCGotHit = 0 
+                                for IOCIndx, AnyIOC in enumerate(IOCList):
+                                    if AnyIOC in RowString.lower():
+                                        IOCount[IOCIndx] += 1
+                                        IOCGotHit = 1
 
-                                    if IOCGotHit == 1:
-                                        PreIOC = " <b><font color=red>"
-                                        PostIOC = "</font></b> "
-                                    else: 
-                                        PreIOC = " "
-                                        PostIOC = " "
+                                if IOCGotHit == 1:
+                                    PreIOC = " <b><font color=red>"
+                                    PostIOC = "</font></b> "
+                                else: 
+                                    PreIOC = " "
+                                    PostIOC = " "
 
-                                    outfile.write("<tr><td width=40%>" + PreIOC + csvrow[13] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[6] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[7] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[8] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
-                                    reccount = reccount + 1
+                                outfile.write("<tr><td width=40%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                                reccount = reccount + 1
 
             outfile.write("</tbody></table>\n")
             # csvfile.close()
@@ -1350,7 +1441,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunLrgAct == 1) and SrcMFT == 1:
         print("[+] Generating Large Active Files $MFT Information...")
-        filname = dirtrge + "\\MFTDump.csv"
+        filname = dirtrge + "\\MFTActv.csv"
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1375,37 +1466,35 @@ def main():
             outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
 
             with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
-                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter='\t')
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
                 for csvrow in csvread:
-                    if len(csvrow) > 13:
-                        # Is it a Deleted File
-                        if csvrow[1] == "0":
-                            FileSize = csvrow[10]
-                            if (FileSize.isdigit and len(FileSize) > 1):
-                                nFileSize = int(FileSize)
-                                if nFileSize > 100000000:
+                    if len(csvrow) > 5:
+                        FileSize = csvrow[5]
+                        if (FileSize.isdigit and len(FileSize) > 1):
+                            nFileSize = int(FileSize)
+                            if nFileSize > 100000000:
 
-                                    RowString = ' '.join(map(str, csvrow))
+                                RowString = ' '.join(map(str, csvrow))
 
-                                    IOCGotHit = 0 
-                                    for IOCIndx, AnyIOC in enumerate(IOCList):
-                                        if AnyIOC in RowString.lower():
-                                            IOCount[IOCIndx] += 1
-                                            IOCGotHit = 1
+                                IOCGotHit = 0 
+                                for IOCIndx, AnyIOC in enumerate(IOCList):
+                                    if AnyIOC in RowString.lower():
+                                        IOCount[IOCIndx] += 1
+                                        IOCGotHit = 1
 
-                                    if IOCGotHit == 1:
-                                        PreIOC = " <b><font color=red>"
-                                        PostIOC = "</font></b> "
-                                    else: 
-                                        PreIOC = " "
-                                        PostIOC = " "
+                                if IOCGotHit == 1:
+                                    PreIOC = " <b><font color=red>"
+                                    PostIOC = "</font></b> "
+                                else: 
+                                    PreIOC = " "
+                                    PostIOC = " "
 
-                                    outfile.write("<tr><td width=40%>" + PreIOC + csvrow[13] + PostIOC  + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[6] + PostIOC + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[7] + PostIOC  + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + csvrow[8] + PostIOC  + "</td>\n")
-                                    outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC  + "</td></tr>\n")
-                                    reccount = reccount + 1
+                                outfile.write("<tr><td width=40%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                                outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                                reccount = reccount + 1
 
             outfile.write("</tbody></table>\n")
             # csvfile.close()
@@ -1429,7 +1518,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunTmpAct == 1) and SrcMFT == 1:
         print("[+] Generating Active Files in Temp Directories...")
-        filname = dirtrge + "\\MFTDump.csv"
+        filname = dirtrge + "\\MFTActv.csv"
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1454,41 +1543,39 @@ def main():
             outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
 
             with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
-                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter='\t')
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
                 for csvrow in csvread:
-                    if len(csvrow) > 13:
-                        # Is it an Active File
-                        if csvrow[1] == "0":
-                            FullPath = csvrow[13]
-                            lFullPath = FullPath.lower()
-                            if "\\temp\\" in lFullPath and ".exe" in lFullPath:
-                                FileSize = csvrow[10]
-                                if (FileSize.isdigit and len(FileSize) > 1):
-                                    nFileSize = int(FileSize)
-                                else:
-                                    nFileSize = 0
+                    if len(csvrow) > 5:
+                        FullPath = csvrow[1]
+                        lFullPath = FullPath.lower()
+                        if "\\temp\\" in lFullPath and ".exe" in lFullPath:
+                            FileSize = csvrow[5]
+                            if (FileSize.isdigit and len(FileSize) > 1):
+                                nFileSize = int(FileSize)
+                            else:
+                                nFileSize = 0
 
-                                RowString = ' '.join(map(str, csvrow))
+                            RowString = ' '.join(map(str, csvrow))
 
-                                IOCGotHit = 0 
-                                for IOCIndx, AnyIOC in enumerate(IOCList):
-                                    if AnyIOC in RowString.lower():
-                                        IOCount[IOCIndx] += 1
-                                        IOCGotHit = 1
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
 
-                                if IOCGotHit == 1:
-                                    PreIOC = " <b><font color=red>"
-                                    PostIOC = "</font></b> "
-                                else: 
-                                    PreIOC = " "
-                                    PostIOC = " "
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
 
-                                outfile.write("<tr><td width=40%>" + PreIOC + csvrow[13] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + csvrow[6] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + csvrow[7] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + csvrow[8] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
-                                reccount = reccount + 1
+                            outfile.write("<tr><td width=40%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                            reccount = reccount + 1
 
             outfile.write("</tbody></table>\n")
 
@@ -1511,7 +1598,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunTmpDel == 1) and SrcMFT == 1:
         print("[+] Generating Deleted Files in Temp Directories...")
-        filname = dirtrge + "\\MFTDump.csv"
+        filname = dirtrge + "\\MFTDelt.csv"
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1536,41 +1623,104 @@ def main():
             outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
 
             with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
-                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter='\t')
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
                 for csvrow in csvread:
-                    if len(csvrow) > 13:
-                        # Is it a Deleted File
-                        if csvrow[1] == "1":
-                            FullPath = csvrow[13]
-                            lFullPath = FullPath.lower()
-                            if "\\temp\\" in lFullPath and ".exe" in lFullPath:
-                                FileSize = csvrow[10]
-                                if (FileSize.isdigit and len(FileSize) > 1):
-                                    nFileSize = int(FileSize)
-                                else:
-                                    nFileSize = 0
+                    if len(csvrow) > 5:
+                        FullPath = csvrow[1]
+                        lFullPath = FullPath.lower()
+                        if "\\temp\\" in lFullPath and ".exe" in lFullPath:
+                            FileSize = csvrow[5]
+                            if (FileSize.isdigit and len(FileSize) > 1):
+                                nFileSize = int(FileSize)
+                            else:
+                                nFileSize = 0
 
-                                RowString = ' '.join(map(str, csvrow))
+                            RowString = ' '.join(map(str, csvrow))
 
-                                IOCGotHit = 0 
-                                for IOCIndx, AnyIOC in enumerate(IOCList):
-                                    if AnyIOC in RowString.lower():
-                                        IOCount[IOCIndx] += 1
-                                        IOCGotHit = 1
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
 
-                                if IOCGotHit == 1:
-                                    PreIOC = " <b><font color=red>"
-                                    PostIOC = "</font></b> "
-                                else: 
-                                    PreIOC = " "
-                                    PostIOC = " "
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
 
-                                outfile.write("<tr><td width=40%>" + PreIOC + csvrow[13] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + csvrow[6] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + csvrow[7] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + csvrow[8] + PostIOC + "</td>\n")
-                                outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
-                                reccount = reccount + 1
+                            outfile.write("<tr><td width=40%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                            outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                            reccount = reccount + 1
+
+            outfile.write("</tbody></table>\n")
+
+            if reccount < 1:
+                outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+            else:
+                outfile.write("<p>Records Found: " + str(reccount) + "</p>\n")
+        else:
+            outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+
+        outfile.write("</div>\n")
+
+    else:
+        print("[+] Bypassing Deleted Files in Temp Directories...")
+
+
+
+    ###########################################################################
+    # IOCs found in the $MFT - (Use Python CSV Reader Module)                 #
+    ###########################################################################
+    if MFTFound == 1 and SrcMFT == 1:
+        print("[+] Generating IOC Matches in the Master File Table ($MFT)...")
+        filname = dirtrge + "\\MFTIOCs.csv"
+
+        if os.path.isfile(filname):
+            reccount = 0
+            outfile.write("<a name=MFTIOCMatch></a>\n")
+            outfile.write("<input class=\"collapse\" id=\"id35\" type=\"checkbox\" checked>\n")
+            outfile.write("<label for=\"id35\">\n")
+            outfile.write("<H2>IOC Matches Found in the $MFT</H2>\n")
+            outfile.write("</label><div><hr>\n")
+
+            outfile.write("<p><i><font color=firebrick>In this section, AChoir has parsed information about IOC Matches \n")
+            outfile.write("in the Master File Table ($MFT). It is important to remember that if IOCs are eneralized \n")
+            outfile.write("and/or very short, you may see a lot of false positives.  If that is the case, take a look \n")
+            outfile.write("at your IOCs to see if they can be made more specific.\n")
+            outfile.write("<font color=gray size=-1><br><br>Source: Parsed $MFT, TZ is UTC</font></font></i></p>\n")
+
+            outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
+            outfile.write("<thead><tr><th width=5%> Del (+/-)</th>\n")
+            outfile.write("<th width=35%> Full Path (+/-)</th>\n")
+            outfile.write("<th width=15%> Created (+/-)</th>\n")
+            outfile.write("<th width=15%> Accessed (+/-)</th>\n")
+            outfile.write("<th width=15%> Modified (+/-)</th>\n")
+            outfile.write("<th width=15%> Size (+/-)</th></tr></thead><tbody>\n")
+
+            with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
+                csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                for csvrow in csvread:
+                    FileSize = csvrow[5]
+                    if (FileSize.isdigit and len(FileSize) > 1):
+                        nFileSize = int(FileSize)
+                    else:
+                        nFileSize = 0
+
+                    PreIOC = " <b><font color=red>"
+                    PostIOC = "</font></b> "
+
+                    outfile.write("<tr><td width=5%>" + PreIOC + csvrow[0] + PostIOC + "</td>\n")
+                    outfile.write("<td width=35%>" + PreIOC + csvrow[1] + PostIOC + "</td>\n")
+                    outfile.write("<td width=15%>" + PreIOC + csvrow[2] + PostIOC + "</td>\n")
+                    outfile.write("<td width=15%>" + PreIOC + csvrow[3] + PostIOC + "</td>\n")
+                    outfile.write("<td width=15%>" + PreIOC + csvrow[4] + PostIOC + "</td>\n")
+                    outfile.write("<td width=15%>" + PreIOC + "{:,}".format(nFileSize) + PostIOC + "</td></tr>\n")
+                    reccount = reccount + 1
 
             outfile.write("</tbody></table>\n")
 
@@ -1592,8 +1742,16 @@ def main():
     # Clean Up.                                                               #
     ###########################################################################
     if RunAllAll == 1 or SrcMFT == 1:
-        os.remove(dirtrge + "\\MFTDump.csv")
-        os.remove("MFTDump.log")
+        if os.path.isfile(dirtrge + "\\MFTDump.csv"):
+            os.remove(dirtrge + "\\MFTDump.csv")
+        if os.path.isfile(dirtrge + "\\MFTDelt.csv"):
+            os.remove(dirtrge + "\\MFTDelt.csv")
+        if os.path.isfile(dirtrge + "\\MFTActv.csv"):
+            os.remove(dirtrge + "\\MFTActv.csv")
+        if os.path.isfile(dirtrge + "\\MFTIOCs.csv"):
+            os.remove(dirtrge + "\\MFTIOCs.csv")
+        if os.path.isfile(dirtrge + "\\MFTDump.log"):
+            os.remove(dirtrge + "\\MFTDump.log")
 
 
     ###########################################################################
