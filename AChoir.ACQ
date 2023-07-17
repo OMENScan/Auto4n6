@@ -18,7 +18,9 @@ LBL:Start
 SYS:cmd.exe /c Color 07
 CN0:0
 SAY:[+] Checking for new Memory Dumps to Process.
-FOR:C:\Auto-Mem\*
+SAY:[+] Note: This is the Reference Implementation using the Full Embedded AChoirX Tool.
+SAY:[+]       See the AChoirX Github for more details.
+FOR:C:\Auto-Mem\Windows\*
 FLT:MemDone.dat
 SET:Filter=excl full
 EXA:A-AChoirx.exe /ini:MemProcess.ACQ "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
@@ -31,7 +33,7 @@ NEQ:&VR1 --
  CN0:++
 END:
 SAY:[+] Checking for new Triage Collections to Process.
-FOR:C:\Auto-Col\*
+FOR:C:\Auto-Col\Windows\*
 FLT:ColDone.dat
 EXA:A-AChoirx.exe /ini:ColProcess.ACQ  "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
 *******************************************************

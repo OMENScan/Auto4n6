@@ -39,20 +39,19 @@ CPY:"&VR0" "&Acq"
 SET:CopyPath=Part
 CKN:&Acq\&VR1
  CN0:++
- N>>:&CN0 5
+ N>>:&CN0 10
   SAY:[!] Max Retries (&CN0) Error Copying Collection File - Exiting...
   Bye:
  END:
 SAY:[+] Retrying Copy (&CN0)...
-SLP:60
+SLP:180
 JMP:CopyCol
 END:
 *******************************************************
 * Fell Through - Process the Triage Collection        *
 *******************************************************
 SAY:[+] Decompressing Triage Collection: &VR1
-EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -pcapstone -y -aou
-EXE:\Utils\7z\7za.exe x "&ACQ\Data.zip" "-o&Acq" -r -y -aou
+EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
 SAY:[+] Triage Decomppress Complete: &VR1
 ACQ:\
 SAY:[+] Running Triage Report: &VR1

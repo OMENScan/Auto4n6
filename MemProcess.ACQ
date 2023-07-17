@@ -39,12 +39,12 @@ CPY:"&VR0" "&Acq"
 SET:CopyPath=Part
 CKN:&Acq\&VR1
  CN0:++
- N>>:&CN0 5
+ N>>:&CN0 10
   SAY:[!] Max Retries (&CN0) Error Copying Memory File - Exiting...
   Bye:
  END:
 SAY:[+] Retrying Copy (&CN0)...
-SLP:60
+SLP:180
 JMP:CopyMem
 END:
 *******************************************************

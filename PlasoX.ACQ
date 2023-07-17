@@ -48,40 +48,40 @@ VER:Windows
   *******************************************************
   ACQ:\TimeLine
   ACQ:\
-  SAY:[+] Now TimeLining &ACQ\Triage\C\$MFT
+  SAY:[+] Now TimeLining &ACQ\Triage\RawData\MFT-C
   SET:SyslogL=none
-  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "mft" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&ACQ\Triage\C\$MFT"
+  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "mft" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&ACQ\Triage\RawData\MFT-C"
   *******************************************************
   * Timeline Event ViewerLogs                           *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\C\Windows\System32\winevt\Logs\**\*.evtx
+  SAY:[+] Now TimeLining &ACQ\Triage\Evt\Sys32\Windows\System32\winevt\Logs\**\*.evtx
   SET:SyslogL=none
-  FOR:&ACQ\Triage\C\Windows\System32\winevt\Logs\**\*.evtx
+  FOR:&ACQ\Triage\Evt\Sys32\WINDOWS\System32\winevt\Logs\**\*.evtx
   EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "winevt,winevtx" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&For"
   *******************************************************
   * Timeline Prefetch                                   *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\C\Windows\Prefetch\*.*
+  SAY:[+] Now TimeLining &ACQ\Triage\Prf\*.*
   SET:SyslogL=none
-  FOR:&ACQ\Triage\C\Windows\Prefetch\*.*
+  FOR:&ACQ\Triage\Prf\*.*
   EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "prefetch" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&For"
   *******************************************************
   * Timeline System Registries                          *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\C\Windows\System32\config\*.*
+  SAY:[+] Now TimeLining &ACQ\Triage\Reg\*.*
   SET:SyslogL=none
-  FOR:&ACQ\Triage\C\Windows\System32\config\**\*
+  FOR:&ACQ\Triage\Reg\*.*
   EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "winreg_default,winreg" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\TimeLine\timeline.bodyfile "&For"
   *******************************************************
   * Timeline User Registries                            *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\C\Users\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]
+  SAY:[+] Now TimeLining &ACQ\Triage\Reg\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]
   SET:SyslogL=none
-  FOR:&ACQ\Triage\C\Users\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]
+  FOR:&ACQ\Triage\Reg\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]
   EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "winreg_default,winreg" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&For"
   *******************************************************
   * Convert BodyFile to CSV                             *

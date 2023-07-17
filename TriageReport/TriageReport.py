@@ -87,6 +87,13 @@ parser.add_argument("-c", dest="cfgname", default="AChReport.cfg",
 args = parser.parse_args()
 
 
+
+###########################################################################
+# Chainsaw From - To - THIS IS TEMPORARY!!!  TAKE IT OUT!!!
+###########################################################################
+# chswFromTo = " --from \"2023-04-29T18:00:00\" --to \"2023-04-29T22:10:00\" "
+chswFromTo = ""
+
 ###########################################################################
 # Where are the Artifacts, What is the Output File Name
 ###########################################################################
@@ -2362,6 +2369,8 @@ def main():
 
 
 
+
+
     ###########################################################################
     # Write Program Compatibility Assistant Data (Python CSV Reader Module)   #
     ###########################################################################
@@ -3905,7 +3914,7 @@ def main():
             ChSwSubDir = ""
 
             EvtName = dirname + EvtDir1
-            cmdexec = ".\\chainsaw\\chainsaw_x86_64-pc-windows-msvc.exe hunt --skip-errors --timezone UTC --full --csv --output " + dirtrge + "\\ChainCSV --mapping .\\chainsaw\\mappings\\sigma-event-logs-all.yml --rule .\\chainsaw\\rules --sigma .\\chainsaw\\sigma " + EvtName
+            cmdexec = ".\\chainsaw\\chainsaw_x86_64-pc-windows-msvc.exe hunt " + chswFromTo + " --skip-errors --timezone UTC --full --csv --output " + dirtrge + "\\ChainCSV --mapping .\\chainsaw\\mappings\\sigma-event-logs-all.yml --rule .\\chainsaw\\rules --sigma .\\chainsaw\\sigma " + EvtName
             returned_value = os.system(cmdexec)
 
             outfile.write("<a name=ChainSaw></a>\n")
