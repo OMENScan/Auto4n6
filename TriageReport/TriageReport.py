@@ -49,18 +49,6 @@
 #   v1.00 - Merge of AChReport and VelReport into TriageReport        #
 #   v1.10 - Improvements in IOC Reporting                             #
 #   v1.20 - Add Windows 11 Program Compatiblity Assistant Artifact    #
-#   v1.30 - Fundamental Changes to allow TriageReport to run at scale #
-#           Change Location of directories to be unique               #
-#         - Removing the requirement for AChoirX to be installed:     #
-#           REquires the following programs:                          #
-#           .\LogParser.exe - Log Parser                              #
-#           .\Dsk\MFTDump.exe - Parses the MFT                        #
-#           OR                                                        #
-#           .\Dsk\MFTECmd.exe - Parses the MFT                        #
-#           .\Sys\WinpPefetchView.exe  - Parses the Prefetch Files    #
-#           .\SYS\\RBCmd.exe - Parses the Recycle Bin                 #
-#           .\SYS\\LECmd.exe - Parses LNK Files                       #
-#           .\Chainsaw\chainsaw_x86_64-pc-windows-msvc.exe            #
 #   v1.40 - Add Sec EventID 4648  - Logon Attemp with Explicit Creds  #
 #   v1.41 - Temporary Chainsaw Sanity Check code.                     #
 #   v1.42 - Add MFTECmd as optional MFT Parser                        #
@@ -68,6 +56,7 @@
 #         - Add Scan of the Entire MFT for IOCs                       #
 #   v1.43 - Fix Netstat-abno.dat file name                            #
 #   v1.44 - Fix Scheduled Task XML Parsing                            #
+#   v1.45 - Process Additional Chainsaw Output Files                  #
 ####################################################################### 
 import os
 import sys
@@ -90,12 +79,6 @@ args = parser.parse_args()
 
 
 ###########################################################################
-# Chainsaw From - To - THIS IS TEMPORARY!!!  TAKE IT OUT!!!
-###########################################################################
-# chswFromTo = " --from \"2023-04-29T18:00:00\" --to \"2023-04-29T22:10:00\" "
-
-
-###########################################################################
 # Where are the Artifacts, What is the Output File Name
 ###########################################################################
 cfgname = str(args.cfgname)
@@ -106,6 +89,7 @@ htmname = dirtrge + "\\" + diright + ".htm"
 ipsnameall = dirtrge + "\\AllIps.txt"
 domnameall = dirtrge + "\\AllDoms.txt"
 hshnameall = dirtrge + "\\AllHash.txt"
+
 
 
 ###########################################################################
@@ -436,7 +420,7 @@ def main():
 
             elif cfgline.startswith("IPConn2:"):
                 IPConn2 = cfgline[8:].strip()
-                print("[+] Netstat -abno Connection Data: " + IPConn2)
+                print("[+] Netstat -abno IP Connection Data: " + IPConn2)
 
             elif cfgline.startswith("UsrAsst:"):
                 UsrAsst = cfgline[8:].strip()
@@ -607,7 +591,7 @@ def main():
     regName = dirname + RegSoft
     if os.path.isfile(regName):
         SrcSysReg = 1
-    
+
         exeName = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe"
         if os.path.isfile(exeName):
             cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p source_os -r " + dirname + RegSoft + " > " + dirtrge + "\\SysInfo.dat"
@@ -930,6 +914,7 @@ def main():
         os.remove(dirtrge + "\\System1.evtx")
 
 
+
     ###########################################################################
     # Fell Through, Now Process the files and extract data for report         #
     ###########################################################################
@@ -982,7 +967,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.42)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.45)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -1112,7 +1097,7 @@ def main():
 
             innfile.close()
 
-        if os.path.isfile(dedname):
+        elif os.path.isfile(dedname):
             outfile.write("<p><i><font color=firebrick>In this section, AChoir has parsed standard information about\n")
             outfile.write("the endpoint. This information was extracted from the SYSTEM and SOFTWARE Registry Hives\n")
             outfile.write("using RegRipper.</font></i></p>\n")
@@ -1750,7 +1735,6 @@ def main():
         print("[+] Bypassing Deleted Files in Temp Directories...")
 
 
-
     ###########################################################################
     # Clean Up.                                                               #
     ###########################################################################
@@ -1937,7 +1921,6 @@ def main():
             outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
 
         outfile.write("</div>\n")
-
 
 
         print("[+] Generating Attempted Explicit Logins Information...")
@@ -2442,7 +2425,6 @@ def main():
         else:
             print("[!] Bypassing PCA Information (No PCA Input Data) ...")
             outfile.write("<p><b><font color = red> No PCA Input Data Found! </font></b></p>\n")
-
 
 
     ###########################################################################
@@ -2951,29 +2933,25 @@ def main():
 
         print("[+] Checking for Eric Zimmerman LECmd Link Parser...")
 
-        if os.path.isfile(".\\Sys\\LECmd.exe") == False:
+        if os.path.isfile(".\\LECmd.exe") == False:
             print("[?] LECmd executable not found...  Would you like to Download it...")
             YesOrNo = input("[?] Y/N > ")
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading LECmd from Eric Zimmerman Web Site...")
-
-                if not os.path.exists('.\\Sys'):
-                    os.makedirs('.\\Sys')
-
                 LECUrl = 'https://f001.backblazeb2.com/file/EricZimmermanTools/LECmd.zip'
                 LECReq = requests.get(LECUrl, allow_redirects=True)
-                open('.\\Sys\\LECmd.zip', 'wb').write(LECReq.content)
+                open('LECmd.zip', 'wb').write(LECReq.content)
 
                 print("[+] Unzipping LECmd...")
-                with ZipFile('.\\Sys\\LECmd.zip', 'r') as zipObj:
+                with ZipFile('LECmd.zip', 'r') as zipObj:
                     # Extract all the contents of zip file in current directory
-                    zipObj.extractall(path=".\\Sys")
+                    zipObj.extractall()
             else:
                 print("[!] LECmd Download Bypassed...")
 
 
-        exeName = ".\\Sys\\LECmd.exe"
+        exeName = ".\\LECmd.exe"
         if os.path.isfile(exeName):
             print("[+] LECmd executable found")
             print("[+] Parsing Desktop and Recent LNK Files from Multiple User Profiles...")
@@ -3765,29 +3743,29 @@ def main():
     if (RunAllAll == 1 or RunShlBag == 1):
         print("[+] Checking for Eric Zimmerman SBECmd...")
 
-        if os.path.isfile(".\\Sys\\SBECmd.exe") == False:
+        if os.path.isfile(".\\SBECmd\\SBECmd.exe") == False:
             print("[?] Shell Bags Explorer - SBECmd executable not found...  Would you like to Download it...")
             YesOrNo = input("[?] Y/N > ")
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading Eric Zimmerman Shell Bags Explorer...")
 
-                if not os.path.exists('.\\Sys'):
-                    os.makedirs('.\\Sys')
+                if not os.path.exists('.\\SBECMD'):
+                    os.makedirs('.\\SBECMD')
 
                 ShlBUrl = 'https://f001.backblazeb2.com/file/EricZimmermanTools/SBECmd.zip'
                 ShlBReq = requests.get(ShlBUrl, allow_redirects=True)
-                open('.\\SYs\\SBECmd.zip', 'wb').write(ShlBReq.content)
+                open('.\\SBECmd\\SBECmd.zip', 'wb').write(ShlBReq.content)
 
                 print("[+] Unzipping Shell Bags Explorer - SBECmd...")
-                with ZipFile('.\\SYs\\SBECmd.zip', 'r') as zipObj:
+                with ZipFile('.\\SBECMD\\SBECmd.zip', 'r') as zipObj:
                     # Extract all the contents of zip file in current directory
-                    zipObj.extractall(path='.\\Sys')
+                    zipObj.extractall(path='.\\SBECmd')
             else:
                 print("[!] Shell Bags Explorer Download Bypassed...")
 
 
-        if os.path.isfile(".\\Sys\\SBECmd.exe"):
+        if os.path.isfile(".\\SBECmd\\SBECmd.exe"):
             print("[+] Shell Bags Explorer executable found")
             print("[+] Running Shell Bags Explorer against all Collection directories...")
 
@@ -3808,6 +3786,7 @@ def main():
             outfile.write("Shell Bags Explorer Data.  Shell Bags Explorer parses the Shell Bags Registry \n")
             outfile.write("entries in NTUSER.DAT and USRCLASS.DAT files.  Shell Bags are useful in identifying\n")
             outfile.write("directory accesses by each user/profile.<font color=gray size=-1><br><br>Source: Parsed Shellbags, TZ is in +hh:mm format</font></font></i></p>\n")
+
 
             ###########################################################################
             # Parse all SBECmd csv files                                              #
@@ -3868,14 +3847,16 @@ def main():
                         else:
                             outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
 
-
-                outfile.write("</div>\n")
-
             else:
                 print("[!] No Shell Bags Parsed!  Bypassing Shell Bags Processing...")
 
         else:
             print("[!] Shell Bags Explorer Executable not found!  Bypassing Shell Bags Processing...")
+
+
+        outfile.write("</div>\n")
+
+
 
     else:
         print("[!] Bypassing Shell Bags Processing...")
@@ -3883,14 +3864,10 @@ def main():
 
     ###########################################################################
     # Run Countercept Chainsaw Program against all .EVTX Files                #
-    # [+] audit_log_was_cleared.csv                                           #
-    # [+] system_log_was_cleared.csv                                          #
-    # [+] suspicious_process_creation.csv                                     #
-    # [+] suspicious_registry_event.csv                                       #
-    # [+] suspicious_file_creation.csv                                        #
-    # [+] user_added_to_interesting_group.csv                                 #
-    # [+] windows_defender_detections.csv                                     #
-    # [+] 4624_logins.csv                                                     #
+    #                                                                         #
+    # IMPORTANT NOTE: This section is coded for Chainsaw v2.9 - Other         #
+    #  versions may require modifications to accomodate, since output can     #
+    #  change between versions.                                               #
     ###########################################################################
     if (RunAllAll == 1 or RunChnSaw == 1) and SrcEvtx == 1:
         print("[+] Checking for F-Secure Countercept Chainsaw...")
@@ -3974,10 +3951,10 @@ def main():
                                 PostIOC += " (+/-)"
 
                             outfile.write("<tr><" + tdtr + " width=20%>" + PreIOC + csvrow[0] + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=40%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[2] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + "></tr>\n")
+                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + "></tr>\n")
 
                             if reccount == 0:
                                 outfile.write("</thead><tbody>\n")
@@ -4035,11 +4012,12 @@ def main():
                                 PostIOC += " (+/-)"
 
                             outfile.write("<tr><" + tdtr + " width=20%>" + PreIOC + csvrow[0] + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=30%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[2] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
                             outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + "></tr>\n")
+                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=15%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=15%>" + PreIOC + csvrow[8] + PostIOC + "</" + tdtr + "></tr>\n")
 
                             if reccount == 0:
                                 outfile.write("</thead><tbody>\n")
@@ -4223,8 +4201,8 @@ def main():
                                 PostIOC += " (+/-)"
 
                             outfile.write("<tr><" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " valign=top width=5%>" + PreIOC + csvrow[2] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=5%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
                             outfile.write("<" + tdtr + " valign=top width=15%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
                             outfile.write("<" + tdtr + " valign=top width=15%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
                             outfile.write("<" + tdtr + " valign=top width=5%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + ">\n")
@@ -4245,6 +4223,318 @@ def main():
                     outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
                 else:
                     outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
+
+            ###########################################################################
+            # Chainsaw: Log Tampering (v1.45)                                         #
+            ###########################################################################
+            for ChName in glob.glob(dirtrge + '\\**\\log_tampering.csv', recursive=True):
+                outfile.write("<table class=\"sortable\" valign=top border=1 cellpadding=5 width=100%>\n")
+                outfile.write("<p><i><font color=firebrick>Log Tampering:</font></i></p>\n")
+
+                reccount = 0
+                with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
+                    csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                    for csvrow in csvread:
+                        if len(csvrow) > 5:
+                            if reccount == 0:
+                                tdtr = "th"
+                            else:
+                                tdtr = "td"
+
+                            # Is it in our IOC List?
+                            RowString = ' '.join(map(str, csvrow))
+
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
+
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
+
+                            if reccount == 0:
+                                outfile.write("<thead>\n")
+                                PostIOC += " (+/-)"
+
+                            outfile.write("<tr><" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                            if reccount == 0:
+                                outfile.write("</thead><tbody>\n")
+
+                            reccount = reccount + 1
+                outfile.write("</tbody></table>\n")
+                os.remove(ChName)
+
+                if ChSwSubDir == "":
+                    Path_File = os.path.split(ChName)
+                    ChSwSubDir = Path_File[0]
+
+                if reccount < 2:
+                    outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+                else:
+                    outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
+
+            ###########################################################################
+            # Chainsaw: Powershell Script (v1.45)                                     #
+            ###########################################################################
+            for ChName in glob.glob(dirtrge + '\\**\\powershell_script.csv', recursive=True):
+                outfile.write("<table class=\"sortable\" valign=top border=1 cellpadding=5 width=100%>\n")
+                outfile.write("<p><i><font color=firebrick>Powershell Script:</font></i></p>\n")
+
+                reccount = 0
+                with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
+                    csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                    for csvrow in csvread:
+                        if len(csvrow) > 5:
+                            if reccount == 0:
+                                tdtr = "th"
+                            else:
+                                tdtr = "td"
+
+                            # Is it in our IOC List?
+                            RowString = ' '.join(map(str, csvrow))
+
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
+
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
+
+                            if reccount == 0:
+                                outfile.write("<thead>\n")
+                                PostIOC += " (+/-)"
+
+                            outfile.write("<tr><" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=15%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=5%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=30%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                            if reccount == 0:
+                                outfile.write("</thead><tbody>\n")
+
+                            reccount = reccount + 1
+                outfile.write("</tbody></table>\n")
+                os.remove(ChName)
+
+                if ChSwSubDir == "":
+                    Path_File = os.path.split(ChName)
+                    ChSwSubDir = Path_File[0]
+
+                if reccount < 2:
+                    outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+                else:
+                    outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
+
+            ###########################################################################
+            # Chainsaw: RDP Attacks (v1.45)                                           #
+            ###########################################################################
+            for ChName in glob.glob(dirtrge + '\\**\\rdp_attacks.csv', recursive=True):
+                outfile.write("<table class=\"sortable\" valign=top border=1 cellpadding=5 width=100%>\n")
+                outfile.write("<p><i><font color=firebrick>RDP Attacks:</font></i></p>\n")
+
+                reccount = 0
+                with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
+                    csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                    for csvrow in csvread:
+                        if len(csvrow) > 5:
+                            if reccount == 0:
+                                tdtr = "th"
+                            else:
+                                tdtr = "td"
+
+                            # Is it in our IOC List?
+                            RowString = ' '.join(map(str, csvrow))
+
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
+
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
+
+                            if reccount == 0:
+                                outfile.write("<thead>\n")
+                                PostIOC += " (+/-)"
+
+                            outfile.write("<tr><" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=15%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=5%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[8] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[9] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                            if reccount == 0:
+                                outfile.write("</thead><tbody>\n")
+
+                            reccount = reccount + 1
+                outfile.write("</tbody></table>\n")
+                os.remove(ChName)
+
+                if ChSwSubDir == "":
+                    Path_File = os.path.split(ChName)
+                    ChSwSubDir = Path_File[0]
+
+                if reccount < 2:
+                    outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+                else:
+                    outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
+
+
+            ###########################################################################
+            # Chainsaw: RDP Events (v1.45)                                            #
+            ###########################################################################
+            for ChName in glob.glob(dirtrge + '\\**\\rdp_events.csv', recursive=True):
+                outfile.write("<table class=\"sortable\" valign=top border=1 cellpadding=5 width=100%>\n")
+                outfile.write("<p><i><font color=firebrick>RDP Events:</font></i></p>\n")
+
+                reccount = 0
+                with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
+                    csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                    for csvrow in csvread:
+                        if len(csvrow) > 5:
+                            if reccount == 0:
+                                tdtr = "th"
+                            else:
+                                tdtr = "td"
+
+                            # Is it in our IOC List?
+                            RowString = ' '.join(map(str, csvrow))
+
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
+
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
+
+                            if reccount == 0:
+                                outfile.write("<thead>\n")
+                                PostIOC += " (+/-)"
+
+                            outfile.write("<tr><" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                            if reccount == 0:
+                                outfile.write("</thead><tbody>\n")
+
+                            reccount = reccount + 1
+                outfile.write("</tbody></table>\n")
+                os.remove(ChName)
+
+                if ChSwSubDir == "":
+                    Path_File = os.path.split(ChName)
+                    ChSwSubDir = Path_File[0]
+
+                if reccount < 2:
+                    outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+                else:
+                    outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
+
+
+            ###########################################################################
+            # Chainsaw: Service Installation (v1.45)                                  #
+            ###########################################################################
+            for ChName in glob.glob(dirtrge + '\\**\\service_installation.csv', recursive=True):
+                outfile.write("<table class=\"sortable\" valign=top border=1 cellpadding=5 width=100%>\n")
+                outfile.write("<p><i><font color=firebrick>Service Installation:</font></i></p>\n")
+
+                reccount = 0
+                with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
+                    csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                    for csvrow in csvread:
+                        if len(csvrow) > 5:
+                            if reccount == 0:
+                                tdtr = "th"
+                            else:
+                                tdtr = "td"
+
+                            # Is it in our IOC List?
+                            RowString = ' '.join(map(str, csvrow))
+
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
+
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
+
+                            if reccount == 0:
+                                outfile.write("<thead>\n")
+                                PostIOC += " (+/-)"
+
+                            outfile.write("<tr><" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[0] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[8] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " valign=top width=10%>" + PreIOC + csvrow[9] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                            if reccount == 0:
+                                outfile.write("</thead><tbody>\n")
+
+                            reccount = reccount + 1
+                outfile.write("</tbody></table>\n")
+                os.remove(ChName)
+
+                if ChSwSubDir == "":
+                    Path_File = os.path.split(ChName)
+                    ChSwSubDir = Path_File[0]
+
+                if reccount < 2:
+                    outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+                else:
+                    outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
 
 
             ###########################################################################
@@ -4301,11 +4591,12 @@ def main():
                                 PostIOC += " (+/-)"
 
                             outfile.write("<tr><" + tdtr + " width=20%>" + PreIOC + csvrow[0] + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=30%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[2] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
                             outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[6] + PostIOC + "</" + tdtr + ">\n")
-                            outfile.write("<" + tdtr + " width=30%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + "></tr>\n")
+                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=10%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + ">\n")
+                            outfile.write("<" + tdtr + " width=30%>" + PreIOC + csvrow[8] + PostIOC + "</" + tdtr + "></tr>\n")
 
                             if reccount == 0:
                                 outfile.write("</thead><tbody>\n")
