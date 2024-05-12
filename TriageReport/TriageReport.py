@@ -58,6 +58,7 @@
 #   v1.44 - Fix Scheduled Task XML Parsing                            #
 #   v1.45 - Process Additional Chainsaw Output Files                  #
 #   v1.46 - Add Hayabusa High and Crit detectons                      #
+#   v1.47 - Fix Multithreaded EOFError on Download (Default is YES)   #
 ####################################################################### 
 import os
 import sys
@@ -968,7 +969,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.46)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.47)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -2936,7 +2937,11 @@ def main():
 
         if os.path.isfile(".\\LECmd.exe") == False:
             print("[?] LECmd executable not found...  Would you like to Download it...")
-            YesOrNo = input("[?] Y/N > ")
+            YesOrNo = "Y"
+            try:
+                YesOrNo = input("[?] Y/N > ")
+            except EOFError:
+                YesOrNo ="Y"
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading LECmd from Eric Zimmerman Web Site...")
@@ -3746,7 +3751,12 @@ def main():
 
         if os.path.isfile(".\\SBECmd\\SBECmd.exe") == False:
             print("[?] Shell Bags Explorer - SBECmd executable not found...  Would you like to Download it...")
-            YesOrNo = input("[?] Y/N > ")
+            YesOrNo = "Y"
+
+            try:
+                YesOrNo = input("[?] Y/N > ")
+            except EOFError:
+                YesOrnNo = "Y"
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading Eric Zimmerman Shell Bags Explorer...")
@@ -3875,7 +3885,11 @@ def main():
 
         if os.path.isfile(".\\chainsaw\\chainsaw_x86_64-pc-windows-msvc.exe") == False:
             print("[?] Chainsaw executable not found...  Would you like to Download F-Secure Countercept...")
-            YesOrNo = input("[?] Y/N > ")
+            YesOrNo = "Y"
+            try:
+                YesOrNo = input("[?] Y/N > ")
+            except EOFError:
+                YesOrnNo = "Y"
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading F-Secure Countercept Chainsaw From Github...")
@@ -4646,28 +4660,6 @@ def main():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     ###########################################################################
     # Run Yamato-Security/hayabusa against all .EVTX Files                    #
     #                                                                         #
@@ -4680,7 +4672,12 @@ def main():
 
         if os.path.isfile(".\\hayabusa\\hayabusa-2.15.0-win-x64.exe") == False:
             print("[?] Hayabusa executable not found...  Would you like to Download hayabusa 2.15.0...")
-            YesOrNo = input("[?] Y/N > ")
+            YesOrNo = "Y"
+
+            try:
+                YesOrNo = input("[?] Y/N > ")
+            except EOFError:
+                YesOrnNo = "Y"
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading hayabusa 2.15.0 From Github...")
