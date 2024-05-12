@@ -57,6 +57,7 @@
 #   v1.43 - Fix Netstat-abno.dat file name                            #
 #   v1.44 - Fix Scheduled Task XML Parsing                            #
 #   v1.45 - Process Additional Chainsaw Output Files                  #
+#   v1.46 - Add Hayabusa High and Crit detectons                      #
 ####################################################################### 
 import os
 import sys
@@ -967,7 +968,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.45)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.46)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -3878,7 +3879,7 @@ def main():
 
             if YesOrNo.upper() == "Y":
                 print("[+] Downloading F-Secure Countercept Chainsaw From Github...")
-                ChSwUrl = 'https://github.com/WithSecureLabs/chainsaw/releases/download/v2.3.1/chainsaw_all_platforms+rules+examples.zip'
+                ChSwUrl = 'https://github.com/WithSecureLabs/chainsaw/releases/download/v2.9.0/chainsaw_all_platforms+rules+examples.zip'
                 ChSwReq = requests.get(ChSwUrl, allow_redirects=True)
                 open('Chainsaw.zip', 'wb').write(ChSwReq.content)
 
@@ -4642,6 +4643,153 @@ def main():
 
     else:
         print("[!] Bypassing Chainsaw Processing...")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ###########################################################################
+    # Run Yamato-Security/hayabusa against all .EVTX Files                    #
+    #                                                                         #
+    # IMPORTANT NOTE: This section is coded for Chainsaw v2.15.0 - Other      #
+    #  versions may require modifications to accomodate, since output can     #
+    #  change between versions.                                               #
+    ###########################################################################
+    if (RunAllAll == 1 or RunChnSaw == 1) and SrcEvtx == 1:
+        print("[+] Checking for Yamato-Security/hayabusa...")
+
+        if os.path.isfile(".\\hayabusa\\hayabusa-2.15.0-win-x64.exe") == False:
+            print("[?] Hayabusa executable not found...  Would you like to Download hayabusa 2.15.0...")
+            YesOrNo = input("[?] Y/N > ")
+
+            if YesOrNo.upper() == "Y":
+                print("[+] Downloading hayabusa 2.15.0 From Github...")
+                ChSwUrl = 'https://github.com/Yamato-Security/hayabusa/releases/download/v2.15.0/hayabusa-2.15.0-win-x64.zip'
+                ChSwReq = requests.get(ChSwUrl, allow_redirects=True)
+                open('Hayabusa.zip', 'wb').write(ChSwReq.content)
+
+                print("[+] Unzipping Hayabusa...")
+                with ZipFile('Hayabusa.zip', 'r') as zipObj:
+                    # Extract all the contents of zip file in current directory
+                    zipObj.extractall(path=".\\hayabusa")
+            else:
+                print("[!] Hayabusa Download Bypassed...")
+
+
+        if os.path.isfile(".\\hayabusa\\hayabusa-2.15.0-win-x64.exe"):
+            print("[+] Hayabusa executable found")
+            print("[+] Running Hayabusa against all Event Logs...")
+
+            ChSwSubDir = ""
+            EvtName = dirname + EvtDir1
+            returned_value = os.system("mkdir " + dirtrge + "\\Hayabusa")
+            cmdexec = ".\\hayabusa\\hayabusa-2.15.0-win-x64.exe csv-timeline -w --UTC -d " + EvtName + " -o " + dirtrge + "\\Hayabusa\\Hayabusa.csv"
+            returned_value = os.system(cmdexec)
+
+            outfile.write("<a name=Hayabusa></a>\n")
+            outfile.write("<input class=\"collapse\" id=\"id36\" type=\"checkbox\" checked>\n")
+            outfile.write("<label for=\"id36\">\n")
+            outfile.write("<H2>Hayabusa Output</H2>\n")
+            outfile.write("</label><div><hr>\n")
+
+            outfile.write("<p><i><font color=firebrick>In this section, AChoir has parsed Yamato-Security/hayabusa\n")
+            outfile.write("Data.  Hayabusa provides a powerful ‘first-response’ capability to quickly\n")
+            outfile.write("identify threats within Windows event logs. It offers a generic and fast method of\n")
+            outfile.write("searching through event logs for keywords, and by identifying threats using built-in\n")
+            outfile.write("detection logic and via support for Sigma detection rules.<font color=gray size=-1><br><br>Source: Parsed Event Logs, TZ is in +hh:mm format</font></font></i></p>\n")
+
+
+            ###########################################################################
+            # Hayabusa: High and Critical Detections                                  #
+            ###########################################################################
+            for ChName in glob.glob(dirtrge + '\\**\\hayabusa.csv', recursive=True):
+                outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
+                outfile.write("<p><i><font color=firebrick>High and Critical Detections:</font></i></p>\n")
+
+                reccount = 0
+                with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
+                    csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
+                    for csvrow in csvread:
+                        if len(csvrow) > 7:
+                            if reccount == 0:
+                                tdtr = "th"
+                            else:
+                                tdtr = "td"
+
+                            # Is it in our IOC List?
+                            RowString = ' '.join(map(str, csvrow))
+
+                            IOCGotHit = 0 
+                            for IOCIndx, AnyIOC in enumerate(IOCList):
+                                if AnyIOC in RowString.lower():
+                                    IOCount[IOCIndx] += 1
+                                    IOCGotHit = 1
+
+                            if IOCGotHit == 1:
+                                PreIOC = " <b><font color=red>"
+                                PostIOC = "</font></b> "
+                            else: 
+                                PreIOC = " "
+                                PostIOC = " "
+
+                            if reccount == 0:
+                                outfile.write("<thead>\n")
+                                PostIOC += " (+/-)"
+
+                            if csvrow[2] == "Level" or csvrow[2] == "high" or csvrow[2] == "crit":
+                                outfile.write("<tr><" + tdtr + " width=20%>" + PreIOC + csvrow[0] + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[1] + PostIOC + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[2] + PostIOC + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[3] + PostIOC + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[4] + PostIOC + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=5%>" + PreIOC + csvrow[5] + PostIOC + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[7] + PostIOC + "</" + tdtr + ">\n")
+                                outfile.write("<" + tdtr + " width=20%>" + PreIOC + csvrow[8] + PostIOC + "</" + tdtr + "></tr>\n")
+
+                                if reccount == 0:
+                                    outfile.write("</thead><tbody>\n")
+
+                                reccount = reccount + 1
+
+                outfile.write("</tbody></table>\n")
+                os.remove(ChName)
+
+                if ChSwSubDir == "":
+                    Path_File = os.path.split(ChName)
+                    ChSwSubDir = Path_File[0]
+
+                if reccount < 2:
+                    outfile.write("<p><b><font color = red> No Data Found! </font></b></p>\n")
+                else:
+                    outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
+
+            outfile.write("</div>\n")
+
+        else:
+            print("[!] Hayabusa Executable not found!  Bypassing Hayabusa Processing...")
+
+    else:
+        print("[!] Bypassing Hayabusa Processing...")
 
 
     ###########################################################################
