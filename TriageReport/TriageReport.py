@@ -59,6 +59,7 @@
 #   v1.45 - Process Additional Chainsaw Output Files                  #
 #   v1.46 - Add Hayabusa High and Crit detectons                      #
 #   v1.47 - Fix Multithreaded EOFError on Download (Default is YES)   #
+#   v1.48 - Small bug Fixes & Update for Lateset AChoirX Layout       #
 ####################################################################### 
 import os
 import sys
@@ -969,7 +970,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.47)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.48)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -3405,8 +3406,9 @@ def main():
 
         if os.path.isdir(curdir):
             outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
-            outfile.write("<thead><tr><th width=40%> URI (+/-)</th>\n")
-            outfile.write("<th width=60%> Command (+/-)</th></tr></thead><tbody>\n")
+            outfile.write("<thead><tr><th width=20%> File (+/-)</th>\n")
+            outfile.write("<th width=40%> URI (+/-)</th>\n")
+            outfile.write("<th width=40%> Command (+/-)</th></tr></thead><tbody>\n")
 
             for root, dirs, files in os.walk(curdir):
                 for fname in files:
@@ -3416,15 +3418,25 @@ def main():
                     task_URI = ""
                     task_Command = ""
 
-                    innfile = open(curfile, encoding='utf16', errors="replace")
+                    # XML Files are actually UTF16 - but if a rogue UTF8 file is present
+                    # this routine will read it.
+                    innfile = open(curfile, encoding='utf8', errors="replace")
                     for innline in innfile:
-                        strip_innline = innline.strip()
+                        # Clean up the string by removing any unicode x00
+                        text_innline = innline.replace('\x00', '')
+                        strip_innline = text_innline.strip()
 
                         if strip_innline.startswith("<URI>"):
                             task_URI = strip_innline[5:]
 
                         elif strip_innline.startswith("<Command>"):
                             task_Command = strip_innline[9:]
+
+                        elif strip_innline.startswith("TaskName:"):
+                            task_URI = strip_innline[9:]
+
+                        elif strip_innline.startswith("Task To Run:"):
+                            task_Command = strip_innline[12:]
 
                     innfile.close()
 
@@ -3444,8 +3456,9 @@ def main():
                         PreIOC = " "
                         PostIOC = " "
 
-                    outfile.write("<tr><td style=\"text-align: left\" width=40%>" + PreIOC + task_URI + PostIOC + "</td>\n")
-                    outfile.write("<td style=\"text-align: left\" width=60%>" + PreIOC + task_Command + PostIOC + "</td></tr>\n")
+                    outfile.write("<tr><td style=\"text-align: left\" width=20%>" + PreIOC + fname + PostIOC + "</td>\n")
+                    outfile.write("<td style=\"text-align: left\" width=40%>" + PreIOC + task_URI + PostIOC + "</td>\n")
+                    outfile.write("<td style=\"text-align: left\" width=40%>" + PreIOC + task_Command + PostIOC + "</td></tr>\n")
 
                     reccount = reccount + 1
 
@@ -3783,7 +3796,7 @@ def main():
             ShlBSubDir = ""
 
             ShlName = dirname + ShelBag
-            cmdexec = ".\\Sys\\SBECmd.exe -d " + ShlName + " --csv " + dirtrge + "\\ShellBags --nl --dt \"yyyy-MM-dd HH:mm:ss K\""
+            cmdexec = ".\\SBECMD\\SBECmd.exe -d " + ShlName + " --csv " + dirtrge + "\\ShellBags --nl --dt \"yyyy-MM-dd HH:mm:ss K\""
             returned_value = os.system(cmdexec)
 
 
