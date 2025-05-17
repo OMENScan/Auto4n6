@@ -1,0 +1,81 @@
+*******************************************************
+* Auto4n6: v0.01                                      *
+*  Plaso Trige Collection Timeliner                   *
+* Uses:                                               *
+*  AChoirX, Plaso                                     *
+*******************************************************
+*   Setup Syslog                                      *
+*******************************************************
+SET:CopyPath=Part
+SET:SyslogS:127.0.0.1
+SET:SyslogP=5514
+SET:SyslogL=min
+****************************************************************
+* Windows:                                                     *
+****************************************************************
+VER:Windows
+  SAY:[+] Re-Load a Timelined Directory into Timesketch...
+  SAY:[+] WARNING: This will create an entirely newe Sketch - Delete the old Sketch manually if it is no longer needed...
+  *******************************************************
+  * Get the Collection To Timeline                      *
+  *******************************************************
+  INP:Enter the Subdirectory of the Time-Lined Data:
+  DIR:\timelines
+  ACQ:\
+  CKN:&Dir\&Inp
+    SAY:
+    SAY:[!] That Collection Directory Does Not Exist. Exiting.
+    BYE:
+  END:
+  SAY:[+] Now TimeLining &Dir\&Inp
+  *******************************************************
+  * Timeline MFT(s)                                     *
+  * Create a new Sketch and Import to Timesketch        *
+  *******************************************************
+  OPN:&ACN\Cache\Filter.txt
+  OUT:&VR1
+  Set:Delims= \/
+
+  FLT:&ACN\Cache\Filter.txt
+  SET:Filter=incl,part
+
+  *******************************************************
+  * Kinda Klugy - But this the only way I found to      *
+  *  Create a new sketch and get the Sketch ID          *
+  *******************************************************
+  SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_name &Inp --timeline_name ts_system_csv /timelines/&Inp/ts_system.csv
+  SYS:cmd /c call docker exec timesketch-dev timesketch --output-format text sketch list > &ACQ\Cache\skout.txt
+  SLP:60
+
+  VR9:0
+  LST:&ACN\Cache\skout.txt
+  VR9:&LS0
+
+  EQU:&VR9 0
+    SAY:[!] Unable to Get Sketch Name...
+  END:
+
+  NEQ:&VR9 0
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name eventlogs_plaso /timelines/&Inp/eventlogs.plaso
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name prefetch_plaso /timelines/&Inp/prefetch.plaso
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name registry_plaso /timelines/&Inp/registry.plaso
+
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_autoruns_csv /timelines/&Inp/ts_autoruns.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_lastact_csv /timelines/&Inp/ts_lastact.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_lnkkfiles_csv /timelines/&Inp/ts_lnkfiles.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_prefetchview_csv /timelines/&Inp/ts_prefetchview.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_browsedown_csv /timelines/&Inp/ts_browsedown.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_browsehist_csv /timelines/&Inp/ts_browsehist.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_srumnetusage_csv /timelines/&Inp/ts_srumnetusage.csv
+
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_chainsaw_sigma /timelines/&Inp/ts_chainsaw.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_hayabusa_sigma /timelines/&Inp/ts_hayabusa.csv
+
+    SYS:cmd /c start docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name MFT_plaso /timelines/&Inp/MFT.plaso
+  END:
+END:
+****************************************************************
+* All Processing Complete                                      *
+****************************************************************
+SET:SyslogL=min
+SAY:[+] Timesketch Re-Load Processing Complete for: &Dir\&Inp

@@ -1,0 +1,92 @@
+*******************************************************
+* Auto4n6: v0.03                                      *
+*  This is a series of AchoirX scripts and forensics  *
+*   parsing and reporting programs that will ingest:  *
+*   - Triage Collections                              *
+*   - Memory Dumps                                    *
+*                                                     *
+*  And put them in a consistent analysis and          *
+*   reporting format.                                 *
+*******************************************************
+*   Setup Syslog                                      *
+*******************************************************
+SET:CopyPath=Part
+SET:SyslogS:127.0.0.1
+SET:SyslogP=5514
+SET:SyslogL=none
+LBL:Start
+SYS:cmd.exe /c Color 07
+CN0:0
+*******************************************************
+* Check for New Memory Dump to process                *
+*******************************************************
+SAY:[+] Checking for new Memory Dumps to Process.
+SAY:[+] Note: This is the Reference Implementation using the Full Embedded AChoirX Tool.
+SAY:[+]       See the AChoirX Github for more details.
+FOR:C:\Auto-Mem\Windows\*
+FLT:MemDone.dat
+SET:Filter=excl full
+EXA:A-AChoirx.exe /ini:MemProcess.ACQ "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
+*******************************************************
+* Did we find Anything? If Yes, set CN0 for new HTML  *
+*******************************************************
+VR1:--
+VR1:&For
+NEQ:&VR1 --
+ CN0:++
+END:
+*******************************************************
+* Check for New Triage Collection to process          *
+*******************************************************
+SAY:[+] Checking for new Triage Collections to Process.
+FOR:C:\Auto-Col\Windows\*
+FLT:ColDone.dat
+EXA:A-AChoirx.exe /ini:ColProcess.ACQ  "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
+*******************************************************
+* Did we find Anything? If Yes, set CN0 for new HTML  *
+*******************************************************
+VR1:--
+VR1:&For
+NEQ:&VR1 --
+ CN0:++
+END:
+*******************************************************
+* Check for New E01 Image to process                  *
+*******************************************************
+SAY:[+] Checking for new E01 Image to Process.
+FOR:C:\Auto-E01\*.E01
+FLT:E01Done.dat
+EXA:A-AChoirx.exe /ini:E01Process.ACQ  "/VR0:&For" "/VR1:&Fnm" "/NAM:&Fnm"
+*******************************************************
+* Did we find Anything? If Yes, set CN0 for new HTML  *
+*******************************************************
+VR1:--
+VR1:&For
+NEQ:&VR1 --
+ CN0:++
+END:
+SLP:30
+*******************************************************
+* Rewrite the HTML Report if we ran Anything          *
+*******************************************************
+N>>:&CN0 0
+ Del:Auto4n6.html
+ Opn:Auto4n6.html
+ Out:<html><head><title>Auto4n6 Parsing Report</title></head>
+ Out:<body><h2>Auto4n6 Parsing Report</h2>
+ Out:<p>Below is an Index of the Auto4n6 Runs</p>
+ Out:<Center><table border=2 width=98% >
+ FLT:None
+ Lst:Auto4n6.csv
+ Out:<tr><td>Collection Name</td> <td>Collection</td><td>Date - Time</td></tr>
+ Out:<tr><td>&ls0</td> <td>&ls1</td><td>&ls2</td></tr>
+ Out:</table></Center></body></html>
+ Opn:Semaph.ore
+END:
+SLP:35
+CKY:Shut.Down
+ SAY:[+] Shutdown Semaphore File (Shut.Down) Detected...  Shutting Down...
+ SAY:[+] Note: Be sure to delete the Shut.Down File before restarting...
+ BYE:
+END:
+JMP:Start

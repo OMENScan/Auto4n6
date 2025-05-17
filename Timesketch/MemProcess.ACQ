@@ -1,0 +1,117 @@
+*******************************************************
+* Auto4n6: v0.03                                      *
+*  Memory Dump Processor                              *
+* Uses:                                               *
+*  AChoirX, Volatility, and Loki Script               *
+*******************************************************
+* Check Previous Run.  MUST BE BEFORE ANY PROCESSING  *
+*******************************************************
+CKY:&Acq
+ SAY:[+] Processing Directory Already Exists: &Acq
+ BYE:
+END:
+*******************************************************
+*   Setup Syslog                                      *
+*******************************************************
+SET:CopyPath=Part
+SET:SyslogS:127.0.0.1
+SET:SyslogP=5514
+SET:SyslogL=min
+SYS:cmd.exe /c Color 07
+SAY:[+] Logging This Processing Run...
+OPN:&Dir\Auto4n6.csv
+OUT:"&Acn","&VR1","&Tim"
+SAY:[+] Processing Memory Dump: &VR1 (Full Path: &VR0)
+ACQ:\
+*******************************************************
+* Log it to Prevent Running it again                  *
+*******************************************************
+OPN:MemDone.dat
+OUT:&VR0
+*******************************************************
+* If the Move Didnt work, its probably still writing  *
+* - Try 5 Times, Then Exit out                        *
+*******************************************************
+CN0:0
+LBL:CopyMem
+SET:CopyPath=None
+CPY:"&VR0" "&Acq"
+SET:CopyPath=Part
+CKN:&Acq\&VR1
+ CN0:++
+ N>>:&CN0 10
+  SAY:[!] Max Retries (&CN0) Error Copying Memory File - Exiting...
+  Bye:
+ END:
+SAY:[+] Retrying Copy (&CN0)...
+SLP:180
+JMP:CopyMem
+END:
+*******************************************************
+* Fell Through - Process the Mem Dump                 *
+*******************************************************
+SAY:[+] Decompressing Memory Dump: &VR1
+EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+SAY:[+] MemDump Decomppress Complete: &VR1
+VR3:&Acq\MemDump\WinPmemDump.Raw
+VR2:C:\Auto4n6\Volatility3\vol.py
+VR1:C:\Auto4n6\Loki\loki.exe
+VR0:py &VR2
+*******************************************************
+* Verify that Volatility and Loki are there           *
+*******************************************************
+CKN:&VR2
+  Say:
+  Say:[!] Volatility Not Found! Exiting...
+  Bye:
+END:
+CKN:&VR1
+  Say:
+  Say:[!] Loki Not Found! Exiting...
+  Bye:
+END:
+*******************************************************
+* Get Memory Dump Location                            *
+*******************************************************
+LBL:Start
+CKY:&VR3
+  Say:[!] Memory File found: &VR3
+  Acq:\VoLoki
+  Say:[+} Gathering Basic Memory Dump Info...
+  Say:[+] Parsing Process List...
+  SYS:&VR0 -f "&VR3" windows.pslist.PsList --exestdout=&acn\VoLoki\PSList.dat
+  Say:[+] Parsing Process Tree...
+  SYS:&VR0 -f "&VR3" windows.pstree.PsTree --exestdout=&acn\VoLoki\PSTree.dat
+  Say:[+] Parsing Process Scan (Unlinked Processes)...
+  SYS:&VR0 -f "&VR3" windows.psscan.PsScan --exestdout=&acn\VoLoki\PSScan.dat
+  Say:[+] Parsing Modules...
+  SYS:&VR0 -f "&VR3" windows.modules.Modules --exestdout=&acn\VoLoki\Modules.dat
+  Say:[+] Parsing Module Scan (Unlinked Modules)...
+  SYS:&VR0 -f "&VR3" windows.modscan.ModScan --exestdout=&acn\VoLoki\ModScan.dat
+  Say:[+] Parsing Driver Scan...
+  SYS:&VR0 -f "&VR3" windows.driverscan.DriverScan --exestdout=&acn\VoLoki\DriverScan.dat
+  Say:[+] Parsing Services Scan...
+  SYS:&VR0 -f "&VR3" windows.getservicesids.GetServiceSIDs --exestdout=&acn\VoLoki\SvcScan.dat
+  Say:[+] Parsing Command Line History...
+  SYS:&VR0 -f "&VR3" windows.cmdline.CmdLine --exestdout=&acn\VoLoki\CmdLine.dat
+  Say:[+] Parsing Network Info...
+  SYS:&VR0 -f "&VR3" windows.netscan.NetScan --exestdout=&acn\VoLoki\Netscan.dat
+  Say:[+] Parsing Open Files Info...
+  SYS:&VR0 -f "&VR3" windows.filescan.FileScan --exestdout=&acn\VoLoki\OpenFiles.dat
+  Say:[+] Creating Process List CSV for Module Processing...
+  SYS:&VR0 -r csv -f "&VR3" windows.pslist.PsList --exestdout=&acn\VoLoki\PSList.csv
+  Say:[+] Dumping Processes in Memory...
+  LST:&Acn\VoLoki\PSList.csv
+  ACQ:\VoLoki\prcdump\PID-&LS1
+  ACQ:\VoLoki\prcdump
+  SYS:&VR0 -o &Acq\PID-&LS1 -f "&VR3" windows.dumpfiles.DumpFiles --pid &LS1
+  Say:[+] Completed Dumping Processes in Memory
+  Say:[+] Looking for Malicious data...
+  ACQ:\VoLoki\malfind
+  SYS:&VR0 -o &Acq -f "&VR3" windows.malfind.Malfind --dump
+  Say:[+] Loki Scanning all extracted Telemetry
+  ACQ:\
+  SYS:&VR1 --noprocscan -l &Acq\LokiLog.txt --intense -p &Acq\VoLoki -r 127.0.0.1 -t 5514 
+End:
+Say:[!] Memory File not found: "&VR3"
+Bye:

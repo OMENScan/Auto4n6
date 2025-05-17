@@ -1,0 +1,3 @@
+Winprefetchview
+LECmd
+SrumECmd
