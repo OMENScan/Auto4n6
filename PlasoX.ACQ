@@ -15,85 +15,115 @@ SET:SyslogL=min
 ****************************************************************
 VER:Windows
   SAY:[+] Windows Timelining...
-  SAY:[+] Checking for Plaso in: &Dir\Plaso
-  CKN:&Dir\Plaso\log2timeline.exe
-    DIR:\Plaso
-    SAY:
-    SAY:[*] Log2TimeLine Not Found, Downloading it... 
-    SAY:
-    GET:https://github.com/OMENScan/AChoir/blob/master/Tools/plaso-20191203-py3.7-amd64.zip?raw=true &Dir\Plaso.zip
-    SAY:
-    SAY:[*] Unzipping Plaso...
-    SAY:
-    UNZ:&Dir\Plaso.zip &Dir
-    SAY:
-  END:
-  DIR:\
-  REQ:&Dir\Plaso\log2timeline.exe
-  REQ:&Dir\Plaso\psort.exe
-  SAY:
-  SAY:[+] Plaso (log2timeline, psort) has been found in: &Dir\Plaso\
   *******************************************************
   * Get the Collection To Timeline                      *
   *******************************************************
+  DIR:\timelines\&ACN
   ACQ:\
   CKN:&ACQ\Triage
     SAY:
     SAY:[!] That Collection Does Not Exist. Exiting.
     BYE:
   END:
-  SAY:[+] Now TimeLining &Dir\&Inp
+  SAY:[+] Now TimeLining &ACQ
   *******************************************************
   * Timeline MFT(s)                                     *
   *******************************************************
-  ACQ:\TimeLine
+  ACQ:\Timeline
   ACQ:\
-  SAY:[+] Now TimeLining &ACQ\Triage\RawData\MFT-C
+  SAY:[+] Now TimeLining &ACQ\Triage\RawData\C\$MFT
   SET:SyslogL=none
-  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "mft" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&ACQ\Triage\RawData\MFT-C"
+  SYS:docker run --rm -v C:/Auto4n6/:/data log2timeline/plaso log2timeline -z UTC --status_view none --quiet --storage_file /data/timelines/&ACN/MFT.plaso /data/&ACN/Triage/RawData/C/$MFT
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/MFT.plaso timesketch-dev:/tmp
   *******************************************************
   * Timeline Event ViewerLogs                           *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\Evt\Sys32\Windows\System32\winevt\Logs\**\*.evtx
+  SAY:[+] Now TimeLining &ACQ\Triage\Evt\**
   SET:SyslogL=none
-  FOR:&ACQ\Triage\Evt\Sys32\WINDOWS\System32\winevt\Logs\**\*.evtx
-  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "winevt,winevtx" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&For"
+  SYS:docker run --rm -v C:/Auto4n6/:/data log2timeline/plaso log2timeline -z UTC --status_view none --quiet --storage_file /data/timelines/&ACN/eventlogs.plaso /data/&ACN/Triage/Evt
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/eventlogs.plaso timesketch-dev:/tmp
   *******************************************************
   * Timeline Prefetch                                   *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\Prf\*.*
+  SAY:[+] Now TimeLining &ACQ\Triage\Prf\**
   SET:SyslogL=none
-  FOR:&ACQ\Triage\Prf\*.*
-  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "prefetch" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&For"
+  SYS:docker run --rm -v C:/Auto4n6/:/data log2timeline/plaso log2timeline -z UTC --status_view none --quiet --storage_file /data/timelines/&ACN/prefetch.plaso /data/&ACN/Triage/Prf
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/prefetch.plaso timesketch-dev:/tmp
   *******************************************************
-  * Timeline System Registries                          *
+  * Timeline System Registries, Amcache, UserRegs       *
   *******************************************************
   SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\Reg\*.*
+  SAY:[+] Now TimeLining &ACQ\Triage\Reg\**
   SET:SyslogL=none
-  FOR:&ACQ\Triage\Reg\*.*
-  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "winreg_default,winreg" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\TimeLine\timeline.bodyfile "&For"
+  SYS:docker run --rm -v C:/Auto4n6/:/data log2timeline/plaso log2timeline -z UTC --status_view none --quiet --storage_file /data/timelines/&ACN/registry.plaso /data/&ACN/Triage/Reg
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/registry.plaso timesketch-dev:/tmp
+  JMP:EndPlaso
   *******************************************************
-  * Timeline User Registries                            *
+  * Copy Over Various timelines Previously Created      *
+  *  Not Needed if the timeline directory is mounted    *
   *******************************************************
-  SET:SyslogL=min
-  SAY:[+] Now TimeLining &ACQ\Triage\Reg\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]
-  SET:SyslogL=none
-  FOR:&ACQ\Triage\Reg\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]
-  EXE:&Dir\Plaso\Log2TimeLine.exe -z UTC --parsers "winreg_default,winreg" --status_view none --quiet --logfile "&Acq\Temp.Log" &Acq\Timeline\timeline.bodyfile "&For"
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_system.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_autoruns.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_lnkfiles.csv timesketch-dev:/tmp 
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_lastact.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_browsedown.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_browsehist.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_chainsaw.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_hayabusa.csv timesketch-dev:/tmp
+  * SYS:docker cp C:/Auto4n6/&ACN/Timeline/ts_prefetchview.csv timesketch-dev:/tmp
   *******************************************************
-  * Convert BodyFile to CSV                             *
+  * Now Create a new Sketch and Import to Timesketch    *
   *******************************************************
-  SET:SyslogL=min
-  SAY:[+] Coverting BodyFile to CSV
-  SET:SyslogL=none
-  EXE:&Dir\Plaso\psort.exe --temporary_directory &Acq\Timeline -z UTC -o l2tcsv -w &Acq\Timeline\timeline.csv &Acq\Timeline\timeline.bodyfile
+  ACQ:\Cache
+  * SYS:cmd /c echo &VR1 > &ACQ\Filter.txt
+  OPN:&ACQ\Filter.txt
+  OUT:&VR1
+  Set:Delims= \/
+
+  ACQ:\
+  FLT:&ACN\Cache\Filter.txt
+  SET:Filter=incl,part
+
+  *******************************************************
+  * Kinda Klugy - But this the only way I found to      *
+  *  Create a new sketch and get the Sketch ID          *
+  *******************************************************
+  SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_name &VR1 --timeline_name ts_system_csv /timelines/&ACN/ts_system.csv
+  SYS:cmd /c call docker exec timesketch-dev timesketch --output-format text sketch list > &ACQ\Cache\skout.txt
+  SLP:60
+
+  VR9:0
+  LST:&ACN\Cache\skout.txt
+  VR9:&LS0
+
+  EQU:&VR9 0
+    SAY:[!] Unable to Get Sketch Name...
+  END:
+
+  NEQ:&VR9 0
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name eventlogs_plaso /timelines/&ACN/eventlogs.plaso
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name prefetch_plaso /timelines/&ACN/prefetch.plaso
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name registry_plaso /timelines/&ACN/registry.plaso
+
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_autoruns_csv /timelines/&ACN/ts_autoruns.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_lastact_csv /timelines/&ACN/ts_lastact.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_lnkkfiles_csv /timelines/&ACN/ts_lnkfiles.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_prefetchview_csv /timelines/&ACN/ts_prefetchview.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_browsedown_csv /timelines/&ACN/ts_browsedown.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_browsehist_csv /timelines/&ACN/ts_browsehist.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_srumnetusage_csv /timelines/&ACN/ts_srumnetusage.csv
+
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_chainsaw_sigma /timelines/&ACN/ts_chainsaw.csv
+    SYS:cmd /c start /WAIT docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name ts_hayabusa_sigma /timelines/&ACN/ts_hayabusa.csv
+
+    SYS:cmd /c start docker exec -it timesketch-dev timesketch_importer --host http://127.0.0.1:5000 -u dev -p dev --sketch_id &Vr9 --timeline_name MFT_plaso /timelines/&ACN/MFT.plaso
+  END:
 END:
 ****************************************************************
 * All Processing Complete                                      *
 ****************************************************************
+LBL:EndPlaso
 SET:SyslogL=min
-SAY:[+] BodyFile Coverted to CSV for: &Acq
 SAY:[+] Plaso Processing Complete for: &Acq

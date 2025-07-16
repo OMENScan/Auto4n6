@@ -1,0 +1,175 @@
+***************************************************
+* Mount an EWF (.E01) File and Pull Artifacts     *
+* - Created by D0n Quixote/OMENScan (Jan 2016)    *
+*   - Requires Admin                              *
+*   - Requires 64 Bit Windows                     *
+*     If you are using 32 Bit Windows:            *
+*     Use the EWF32.Acq Script instead            *
+*                                                 *
+* - IMPORTANT NOTE: IT IS BEST TO MOUNT THE E01   *
+*   AS TEMPORARY WRITE - MANY UTILS FAIL on R/O   *
+*                                                 *
+***************************************************
+* Check Previous Run.  MUST BE BEFORE ANY PROCESSING  *
+*******************************************************
+CKY:&Acq
+ SAY:[+] Processing Directory Already Exists: &Acq
+ BYE:
+END:
+*******************************************************
+*   Setup Syslog                                      *
+*******************************************************
+SET:CopyPath=Part
+SET:SyslogS:127.0.0.1
+SET:SyslogP=5514
+SET:SyslogL=min
+*******************************************************
+* Identify the First Available Drive - Starting at I: *
+*******************************************************
+SAY:[+] Identifying First Avilable Drive...
+CKN:I:\
+ DRV:I:
+END:
+CKN:H:\
+ DRV:H:
+END:
+CKN:G:\
+ DRV:G:
+END:
+CKN:F:\
+ DRV:F:
+END:
+CKN:E:\
+ DRV:E:
+END:
+CKN:D:\
+ DRV:D:
+END:
+SAY:[+] Preflight Check (&Drv\)...
+CKY:&Drv\
+ [!] &Drv Drive is already in Use...  Deferring...
+ SLP:300
+ JMP:AllDun
+END:
+*******************************************************
+* Try to mount the Image first, before anything else  *
+*  OSFMount will use the first available drive        *
+*******************************************************
+CN0:0
+LBL:MountE01
+SAY:[+] Atttempting to Mount:&VR1 ...
+EXE:\EWF\64Bit\OSFMount.com -a -t file -f &VR0 -o physical
+CKN:&Drv\
+ [!] Error Mounting the Image...  Deferring...
+ CN0:++
+ N>>:&CN0 10
+  SAY:[!] Max Retries (&CN0) Error Mounting E01 Image - Exiting...
+  JMP:AllDun
+ END:
+ SLP:300
+ JMP:MountE01
+END:
+SAY:[+] E01 Mount Complete: &VR1 ...
+ACQ:\
+SET:CopyPath=Part
+SAY:[+] Logging This Processing Run...
+OPN:&Dir\Auto4n6.csv
+OUT:"&Acn","&VR1","&Tim"
+SAY:[+] Processing E01 Image File: &VR1 (Full Path: &VR0)
+ACQ:\Triage
+*******************************************************
+* Log it to Prevent Running it again                  *
+*******************************************************
+OPN:E01Done.dat
+OUT:&VR0
+SAY:[+] Checking for the presence of Windows on the Mounted Drive:
+SAY: &Drv\Windows\System32\ntoskrnl.exe
+REQ:&Drv\Windows\System32\ntoskrnl.exe
+SAY:[+] Checking for the presence of Windows on the Mounted Drive:
+SAY: &Drv\Windows\System32\ntoskrnl.exe
+REQ:&Drv\Windows\System32\ntoskrnl.exe
+SAY:[+] Extracting Prefetch Directory...
+ACQ:\Prf
+CPY:"&Drv\Windows\prefetch\**\*" "&Acq"
+SAY:[+] Copy Raw $MFT(s)...
+ACQ:\RawData
+NCP:&Drv:\$MFT "&Acq\&Drv"
+SAY:[+] Copy Raw $LogFile...
+NCP:&Drv:\$LogFile "&Acq\&Drv"
+SAY:[+] Now Extracting USNJrnl...
+EXE:\DSK\ExtractUSNJrnl64.exe /DevicePath:&Drv /OutputPath:&Acq
+SAY:[+] Copying Registry Hives...
+SET:CopyPath=None
+ACQ:\Reg
+CPY:"&Drv\Windows\System32\Config\SECURITY" "&Acq"
+CPY:"&Drv\Windows\System32\Config\SOFTWARE" "&Acq"
+CPY:"&Drv\Windows\System32\Config\SAM" "&Acq"
+CPY:"&Drv\Windows\System32\Config\SYSTEM" "&Acq"
+CPY:"&Drv\Windows\AppCompat\Programs\Amcache.hve" "&Acq"
+SET:CopyPath=Part
+SAY:[+] Copying (System32) EventViewer Logs...
+ACQ:\Evt
+ACQ:\Evt\Sys32
+CPY:"&Drv\Windows\System32\winevt\Logs\*" "&Acq"
+SAY:[+] Copying (Sysnative) EventViewer Logs...
+ACQ:\Evt\Nativ
+CPY:"&Drv\Windows\sysnative\winevt\Logs\*" "&Acq"
+SAY:[+] Parsing (System32) Etc Directory, and SRUM...
+ACQ:\SYS
+ACQ:\SYS\Sys32
+CPY:"&Drv\Windows\System32\Drivers\Etc\*" "&Acq"
+CPY:"&Drv\Windows\System32\sru\SRUDB.dat" "&Acq"
+SAY:[+] Parsing (Sysnative) Hosts And Services Directory...
+ACQ:\SYS\Nativ
+CPY:"&Drv\Windows\sysnative\Drivers\Etc\*" "&Acq"
+CPY:"&Drv\Windows\sysnative\sru\SRUDB.dat" "&Acq"
+SAY:[+] Gathering Scheduled Task Information...
+ACQ:\Sch
+CPY:"&Drv\Windows\System32\Tasks\**\*" "&Acq"
+SAY:[+] Gathering All User Registries...
+SAY:
+FOR:&Drv\Users\*\[Nn][Tt][Uu][Ss][Ee][Rr].[Dd][Aa][Tt]*
+CPY:"&Drv\&FO1\&FO2\&FO3" "&Acn\Reg"
+FOR:&Drv\Users\*\AppData\Local\Microsoft\Windows\[Uu][Ss][Rr][Cc][Ll][Aa][Ss][Ss].[Dd][Aa][Tt]*
+CPY:"&Drv\&FO1\&FO2\&FO3\&FO4\&FO5\&FO6\&FO7" "&Acn\Reg"
+* *** Remove Offline Autoruns - It is too unreliable ***
+* SAY:
+* SAY:[+] Gathering Autoruns for each User Profile...
+* SAY:
+* ACQ:\Arn\&FO2
+* ACQ:\Arn
+* EXE:\SYS\Autorunsc64.exe /accepteula -a * -c -h -z &Drv\Windows &Drv\&FO1\&FO2 --exestdout=&Acn\Arn\&FO2\Autoruns.dat
+* ***
+SAY:[+] Copying all User PowerShell Logs...
+ACQ:\Psh
+CPY:"&Drv\Users\*\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\*" "&Acq"
+SAY:[+] Copying User Recent LNK files...
+ACQ:\Lnk
+CPY:"&Drv\Users\*\Desktop\*.lnk" "&Acq"
+CPY:"&Drv\Users\*\AppData\Roaming\Microsoft\Windows\Recent\*.lnk" "&Acq"
+SAY:[+] Copying WMI CIM database files...
+ACQ:\WMI
+CPY:"&Drv\Windows\System32\wbem\Repository\*" "&Acq"
+SAY:[+] Copying Program Compatibility Assistant files...
+ACQ:\PCA
+CPY:"&Drv\Windows\appcompat\pca\*.txt" "&Acq"
+SAY:[+] Now Extracting Browser History...
+ACQ:\BRW
+EXE:\SYS\BrowsingHistoryView.exe /HistorySource 3 /HistorySourceFolder "&Drv\Users" /VisitTimeFilterType 1 /scomma &Acq\BrowseHist.csv
+SAY:[+] Acquisition Complete... 
+*******************************************************
+* Dismount Image - This should dismount all drives    *
+*******************************************************
+EXE:\EWF\64Bit\OSFMount.com -D -m &Drv
+*******************************************************
+* Fell Through - Process the Triage Collection        *
+*******************************************************
+ACQ:\
+SAY:[+] Running Triage Report: &VR1
+SYS:py &Dir\TriageReport\TriageReport.py -d &Acq -c &Dir\TriageReport\E01Report.cfg
+SAY:[+] Copying Sort Javascript Library
+CPY:"&Dir\TriageReport\sortable-Ach.js" "&Acq"
+SAY:[+] Triage Report Completed: &VR1
+SAY:{+} Running Plaso Timeliner: &VR1
+INI:PlasoX.ACQ
+LBL:AllDun

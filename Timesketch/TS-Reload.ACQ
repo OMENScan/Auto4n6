@@ -32,10 +32,13 @@ VER:Windows
   * Timeline MFT(s)                                     *
   * Create a new Sketch and Import to Timesketch        *
   *******************************************************
-  OPN:&ACN\Cache\Filter.txt
-  OUT:&VR1
+  ACQ:\Cache
+  * SYS:cmd /c echo &Inp > &ACQ\Filter.txt
+  OPN:&ACQ\Filter.txt
+  OUT:&Inp
   Set:Delims= \/
 
+  ACQ:\
   FLT:&ACN\Cache\Filter.txt
   SET:Filter=incl,part
 

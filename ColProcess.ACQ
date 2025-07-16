@@ -52,8 +52,10 @@ END:
 *******************************************************
 SAY:[+] Decompressing Triage Collection: &VR1
 EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
-SAY:[+] Triage Decomppress Complete: &VR1
+SAY:[+] Triage Decompress Complete: &VR1
 ACQ:\
+SAY:[+] Running Timesketch Converter: &VR1
+SYS:py &Dir\TriageReport\ts_Transform.py -d &Acq -c &Dir\TriageReport\ts_Transform.cfg
 SAY:[+] Running Triage Report: &VR1
 SYS:py &Dir\TriageReport\TriageReport.py -d &Acq -c &Dir\TriageReport\AChReport.cfg
 SAY:[+] Copying Sort Javascript Library

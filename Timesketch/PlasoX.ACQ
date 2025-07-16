@@ -59,6 +59,7 @@ VER:Windows
   SET:SyslogL=none
   SYS:docker run --rm -v C:/Auto4n6/:/data log2timeline/plaso log2timeline -z UTC --status_view none --quiet --storage_file /data/timelines/&ACN/registry.plaso /data/&ACN/Triage/Reg
   * SYS:docker cp C:/Auto4n6/&ACN/Timeline/registry.plaso timesketch-dev:/tmp
+  JMP:EndPlaso
   *******************************************************
   * Copy Over Various timelines Previously Created      *
   *  Not Needed if the timeline directory is mounted    *
@@ -75,10 +76,13 @@ VER:Windows
   *******************************************************
   * Now Create a new Sketch and Import to Timesketch    *
   *******************************************************
-  OPN:&ACN\Cache\Filter.txt
+  ACQ:\Cache
+  * SYS:cmd /c echo &VR1 > &ACQ\Filter.txt
+  OPN:&ACQ\Filter.txt
   OUT:&VR1
   Set:Delims= \/
 
+  ACQ:\
   FLT:&ACN\Cache\Filter.txt
   SET:Filter=incl,part
 
@@ -120,5 +124,6 @@ END:
 ****************************************************************
 * All Processing Complete                                      *
 ****************************************************************
+LBL:EndPlaso
 SET:SyslogL=min
 SAY:[+] Plaso Processing Complete for: &Acq

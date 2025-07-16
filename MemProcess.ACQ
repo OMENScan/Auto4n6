@@ -22,7 +22,7 @@ SAY:[+] Logging This Processing Run...
 OPN:&Dir\Auto4n6.csv
 OUT:"&Acn","&VR1","&Tim"
 SAY:[+] Processing Memory Dump: &VR1 (Full Path: &VR0)
-ACQ:\MemDump
+ACQ:\
 *******************************************************
 * Log it to Prevent Running it again                  *
 *******************************************************
@@ -50,7 +50,10 @@ END:
 *******************************************************
 * Fell Through - Process the Mem Dump                 *
 *******************************************************
-VR3:&Acq\&VR1
+SAY:[+] Decompressing Memory Dump: &VR1
+EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+SAY:[+] MemDump Decomppress Complete: &VR1
+VR3:&Acq\MemDump\WinPmemDump.Raw
 VR2:C:\Auto4n6\Volatility3\vol.py
 VR1:C:\Auto4n6\Loki\loki.exe
 VR0:py &VR2
