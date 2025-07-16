@@ -59,7 +59,10 @@ VER:Windows
   SET:SyslogL=none
   SYS:docker run --rm -v C:/Auto4n6/:/data log2timeline/plaso log2timeline -z UTC --status_view none --quiet --storage_file /data/timelines/&ACN/registry.plaso /data/&ACN/Triage/Reg
   * SYS:docker cp C:/Auto4n6/&ACN/Timeline/registry.plaso timesketch-dev:/tmp
-  JMP:EndPlaso
+  ******************************************************************************
+  * Un-comment the line below to bypass loading the parsed data into Timesketch
+  * JMP:EndPlaso
+  ******************************************************************************
   *******************************************************
   * Copy Over Various timelines Previously Created      *
   *  Not Needed if the timeline directory is mounted    *
