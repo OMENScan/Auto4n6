@@ -8,6 +8,7 @@
 #                                                                     #
 #   v0.01 - Basic Ideas                                               #
 #   v0.02 - Add SRUM                                                  #
+#   v0.03 - Add NoData fields if the input is blank                   #
 ####################################################################### 
 import os, stat
 import sys
@@ -269,15 +270,17 @@ def main():
     # Copy SRUM & SOFTWARE and Remove read only - It makes SrumECmd fail      #
     ###########################################################################
     if os.path.isfile(SRUFile):
-        # Old Version used OS Copy
-        # cmdexec = "copy " +  dirname + SrumDir + "\\*.* " + dirname + "\\Cache\\*.*"
-        # returned_value = os.system(cmdexec)
-        # cmdexec = "copy " +  dirname + SysRegs + "\\SOFTWARE " + dirname + "\\Cache\\*.*"
-        # returned_value = os.system(cmdexec)
-        # cmdexec = "attrib " +  dirname + "\\Cache\*.* -r"
-        # returned_value = os.system(cmdexec)
-
         # New Version used Python shutil
+        srum_files = glob.glob(dirname + "\\Cache\\*")
+        for srumfile in srum_files:
+            os.chmod(srumfile, stat.S_IWRITE)
+            os.remove(srumfile)
+
+        srum_files = glob.glob(dirname + "\\Cache\\*.*")
+        for srumfile in srum_files:
+            os.chmod(srumfile, stat.S_IWRITE)
+            os.remove(srumfile)
+
         srum_files = glob.glob(dirname + SrumDir + "\\*.*")
         for srumfile in srum_files:
             shutil.copy(srumfile, dirname + "\\Cache\\")
@@ -368,13 +371,15 @@ def main():
 
                         reccount = reccount + 1
 
-            csvfile.close()
-            csvoutf.close()
-
             if reccount < 2:
                 print("[!] No Records Processed: " + dirname)
+                csvoutf.write("\"NoData\",\"NoData\",\"NoData\",\"NoData\",\"NoData\",\"NoData\",\"NoData\",\"NoData\",\"NoData\","
+                             + "\"No Data Parsed From Input\",\"1900-01-01T19:01:01\",\"NoData\",\"NoData:Input\"\n")
             else:
                 print("[+] Records Processed: " + str(reccount))
+
+            csvfile.close()
+            csvoutf.close()
 
         else:
             print("[!] BBypassing Prefetch Data ...")
@@ -404,10 +409,10 @@ def main():
                                          + csvrow[3].replace(',',' - ').replace('"','') + "\",\"" + csvrow[4].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[5].replace(',',' - ').replace('"','') + "\",\"" + "message" +"\",\"" + csvrow[7].replace(',',' - ').replace('"','') +"\",\""
                                          + csvrow[8].replace(',',' - ').replace('"','') + "\",\"" + csvrow[9].replace(',',' - ').replace('"','') + "\",\"" 
-                                         + csvrow[10].replace(',',' - ').replace('"','') +"\",\"" + csvrow[11].replace(',',' - ').replace('"','') +"\",\""
+                                         + csvrow[10].replace(',',' - ').replace('"','') + "\",\"" + csvrow[11].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[12].replace(',',' - ').replace('"','') + "\",\"" + csvrow[13].replace(',',' - ').replace('"','') + "\",\""
-                                         + csvrow[14].replace(',',' - ').replace('"','') +"\",\"" + csvrow[15].replace(',',' - ').replace('"','') +"\",\""
-                                         + "\",\"" + csvrow[16].replace(',',' - ').replace('"','') + "\",\"" + "timestamp_desc\",\"data_type\"\n")
+                                         + csvrow[14].replace(',',' - ').replace('"','') + "\",\"" + csvrow[15].replace(',',' - ').replace('"','') + "\",\""
+                                         + csvrow[16].replace(',',' - ').replace('"','') + "\",\"" + "timestamp_desc\",\"data_type\"\n")
                         else:
                             if csvrow[0] == "":
                                 csvrow[0] = "1900-01-01T19:01:01"
@@ -424,18 +429,27 @@ def main():
                                          + csvrow[10].replace(',',' - ').replace('"','') + "\",\"" + csvrow[11].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[12].replace(',',' - ').replace('"','') + "\",\"" + csvrow[13].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[14].replace(',',' - ').replace('"','') +"\",\"" + csvrow[15].replace(',',' - ').replace('"','') +"\",\""
-                                         + "\",\"" + csvrow[16].replace(',',' - ').replace('"','') + "\",\""
+                                         + csvrow[16].replace(',',' - ').replace('"','') + "\",\""
                                          + "autorun_date\",\"autoruns:autorun\"\n")
 
                         reccount = reccount + 1
 
-            csvfile.close()
-            csvoutf.close()
-
             if reccount < 2:
                 print("[!] No Records Processed: " + dirname)
+                csvoutf.write("\"1900-01-01T19:01:01\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "No Data Parsed From Input" +"\",\"" + "NoData" +"\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData\",\"NoData:Input\"\n")
             else:
                 print("[+] Records Processed: " + str(reccount))
+
+            csvfile.close()
+            csvoutf.close()
 
         else:
             print("[!] Bypassing Browser History Transform (No Input Data) ...")
@@ -504,17 +518,32 @@ def main():
                                          + csvrow[21].replace(',',' - ').replace('"','') + "\",\"" + csvrow[22].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[23].replace(',',' - ').replace('"','') + "\",\"" + csvrow[24].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[25].replace(',',' - ').replace('"','') + "\",\"" + csvrow[2].replace(',',' - ').replace('"','') + "\",\""
-                                         + "timestamp_desc\",\"data_type\"\n")
+                                         + "LNKFileMod\",\"LinkFile:Modified\"\n")
 
                         reccount = reccount + 1
 
-            csvfile.close()
-            csvoutf.close()
 
             if reccount < 2:
                 print("[!] No Records Processed: " + dirname)
+                csvoutf.write("\"No Data Parsed From Input\",\"" + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\"" 
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "1900-01-01T19:01:01\",\"NoData\",\"NoData:Input\"\n")
             else:
                 print("[+] Records Processed: " + str(reccount))
+
+            csvfile.close()
+            csvoutf.close()
 
         else:
             print("[!] Bypassing Link File Transform (No Input Data) ...")
@@ -563,13 +592,18 @@ def main():
 
                         reccount = reccount + 1
 
-            csvfile.close()
-            csvoutf.close()
-
             if reccount < 2:
                 print("[!] No Records Processed: " + dirname)
+                csvoutf.write("\"1900-01-01T19:01:01\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "No Data Parsed From Input\",\"NoData\",\"NoData:Input\"\n")
             else:
                 print("[+] Records Processed: " + str(reccount))
+
+            csvfile.close()
+            csvoutf.close()
 
         else:
             print("[!] Bypassing Last Activity View Transform (No Input Data) ...")
@@ -598,7 +632,7 @@ def main():
                                          + csvrow[1].replace(',',' - ').replace('"','') + "\",\"" + csvrow[2].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[3].replace(',',' - ').replace('"','') + "\",\"" + csvrow[4].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[5].replace(',',' - ').replace('"','') + "\",\"" + csvrow[6].replace(',',' - ').replace('"','') +"\",\""
-                                         + csvrow[7].replace(',',' - ').replace('"','') +"\",\"" + csvrow[8].replace(',',' - ').replace('"','')  + "\",\""
+                                         + csvrow[7].replace(',',' - ').replace('"','') +  "\",\"" + csvrow[8].replace(',',' - ').replace('"','')  + "\",\""
                                          + csvrow[9].replace(',',' - ').replace('"','') + "\",\"" + csvrow[10].replace(',',' - ').replace('"','') +"\",\""
                                          + csvrow[11].replace(',',' - ').replace('"','') +"\",\"" + csvrow[12].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[13].replace(',',' - ').replace('"','') + "\",\""
@@ -629,13 +663,22 @@ def main():
 
                         reccount = reccount + 1
 
-            csvfile.close()
-            csvoutf.close()
-
             if reccount < 2:
                 print("[!] No Records Processed: " + dirname)
+                csvoutf.write("\"No Data Parsed From Input\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\""
+                             + "1900-01-01T19:01:01\",\"NoData\",\"NoData:Input\"\n")
             else:
                 print("[+] Records Processed: " + str(reccount))
+
+            csvfile.close()
+            csvoutf.close()
 
         else:
             print("[!] Bypassing Browser History Transform (No Input Data) ...")
@@ -691,13 +734,25 @@ def main():
 
                         reccount = reccount + 1
 
-            csvfile.close()
-            csvoutf.close()
-
             if reccount < 2:
                 print("[!] No Records Processed: " + dirname)
+                csvoutf.write("\""
+                             + "NoData" + "\",\"" + "No Data parsed From Input" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\"" + "NoData" + "\",\""
+                             + "NoData" + "\",\""
+                             + "1900-01-01T19:01:01\",\"NoData\",\"NoData:Input\"\n")
             else:
                 print("[+] Records Processed: " + str(reccount))
+
+            csvfile.close()
+            csvoutf.close()
 
         else:
             print("[!] Bypassing Browser History Transform (No Input Data) ...")
@@ -759,13 +814,23 @@ def main():
 
                                     reccount = reccount + 1
 
-                        csvfile.close()
-                        csvoutf.close()
-
                         if reccount < 2:
                             print("[!] No Records Processed: " + dirname)
+                            csvoutf.write("\""
+                                         + "NoData" + "\",\"" + "1900-01-01T19:01:01" + "\",\"" + "No Data Parsed From Input" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData" + "\",\"" + "NoData" + "\",\""
+                                         + "NoData\",\"NoData:Input\"\n")
                         else:
                             print("[+] Records Processed: " + str(reccount))
+
+                        csvfile.close()
+                        csvoutf.close()
 
             else:
                 print("[!] SRUM or SYSTEM registry Not Found in the Collection: " + dirname + SrumDir)
@@ -894,13 +959,19 @@ def main():
 
                         reccount = reccount + 1
 
-                csvfile.close()
-                csvoutf.close()
-
                 if reccount < 2:
                     print("[!] No Records Processed: " + dirname)
+                    csvoutf.write("\"" + "1900-01-01T19:01:01" + "\",\"" + "No Data Parsed From Input" + "\",\""
+                                 + "NoData" + "\",\"" + "NoData" + "\",\""
+                                 + "NoData" + "\",\"" + "NoData" + "\",\""
+                                 + "NoData" + "\",\"" + "NoData" + "\",\""
+                                 + "NoData" + "\",\""
+                                 + "NoData\",\"NoData:Input\"\n")
                 else:
                     print("[+] Records Processed: " + str(reccount))
+
+                csvfile.close()
+                csvoutf.close()
 
         else:
             print("[!] Chainsaw Executable not found!  Bypassing Chainsaw Processing...")

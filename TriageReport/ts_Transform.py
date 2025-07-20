@@ -518,7 +518,7 @@ def main():
                                          + csvrow[21].replace(',',' - ').replace('"','') + "\",\"" + csvrow[22].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[23].replace(',',' - ').replace('"','') + "\",\"" + csvrow[24].replace(',',' - ').replace('"','') + "\",\""
                                          + csvrow[25].replace(',',' - ').replace('"','') + "\",\"" + csvrow[2].replace(',',' - ').replace('"','') + "\",\""
-                                         + "timestamp_desc\",\"data_type\"\n")
+                                         + "LNKFileMod\",\"LinkFile:Modified\"\n")
 
                         reccount = reccount + 1
 
