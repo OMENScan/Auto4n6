@@ -51,7 +51,8 @@ END:
 * Fell Through - Process the Triage Collection        *
 *******************************************************
 SAY:[+] Decompressing Triage Collection: &VR1
-EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+*EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+UNZ:&ACQ\&VR1 &Acq
 SAY:[+] Triage Decompress Complete: &VR1
 ACQ:\
 SAY:[+] Running Timesketch Converter: &VR1

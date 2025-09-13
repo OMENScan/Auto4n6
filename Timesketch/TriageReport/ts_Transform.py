@@ -9,6 +9,7 @@
 #   v0.01 - Basic Ideas                                               #
 #   v0.02 - Add SRUM                                                  #
 #   v0.03 - Add NoData fields if the input is blank                   #
+#   v0.04 - Further refinements                                       #
 ####################################################################### 
 import os, stat
 import sys
@@ -221,38 +222,38 @@ def main():
     returned_value = os.system("mkdir " + dirtrge)
 
     ChSwSubDir = ""
-    for ChName in glob.glob(dirtrge + '\\**\account_tampering.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\account_tampering.csv', recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\antivirus.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\antivirus.csv', recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\lateral_movement.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\lateral_movement.csv', recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\log_tampering.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\log_tampering.csv', recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\sigma.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\sigma.csv', recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
     if ChSwSubDir != "":
-        ChSwLeftOvers = ChSwSubDir + "\\**\*.csv"
+        ChSwLeftOvers = ChSwSubDir + "\\**\\*.csv"
         for ChName in glob.glob(ChSwLeftOvers, recursive=True):
             os.remove(ChName)
         shutil.rmtree(ChSwSubDir)
@@ -382,7 +383,7 @@ def main():
             csvoutf.close()
 
         else:
-            print("[!] BBypassing Prefetch Data ...")
+            print("[!] Bypassing Prefetch Data ...")
     else:
         print("[!] Bypassing Prefetch Data ...")
 
@@ -465,22 +466,20 @@ def main():
 
         print("[+] Checking for Eric Zimmerman LECmd Link Parser...")
 
-        exeName = ".\\LECmd.exe"
+        reccount = 0
+        filname = dirtrge + "\\LNKFiles.csv"
+        filnout = dirtrge + "\\ts_lnkfiles.csv"
+
+        exeName = ".\\SYS\\LECmd.exe"
         if os.path.isfile(exeName):
             print("[+] LECmd executable found")
             print("[+] Parsing Desktop and Recent LNK Files from Multiple User Profiles...")
 
             curdir = dirname + LNKFile
-            filname = "LNKFiles.csv"
-            fulname = dirtrge + "\\" + filname
             cmdexec = exeName + " -q -d " + curdir + " --dt \"yyyy-MM-dd HH:mm:ss K\" --csv " + dirtrge + " --csvf " + filname 
             returned_value = os.system(cmdexec)
 
             print("[+] Reading Desktop and Recent LNK Files from Multiple User Profiles...")
-
-            reccount = 0
-            filname = dirtrge + "\\" + filname
-            filnout = dirtrge + "\\ts_lnkfiles.csv"
 
         if os.path.isfile(filname):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")

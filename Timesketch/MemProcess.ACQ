@@ -51,7 +51,8 @@ END:
 * Fell Through - Process the Mem Dump                 *
 *******************************************************
 SAY:[+] Decompressing Memory Dump: &VR1
-EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+* EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+UNZ:&ACQ\&VR1 &Acq
 SAY:[+] MemDump Decomppress Complete: &VR1
 VR3:&Acq\MemDump\WinPmemDump.Raw
 VR2:C:\Auto4n6\Volatility3\vol.py

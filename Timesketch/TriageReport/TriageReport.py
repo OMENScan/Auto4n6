@@ -61,6 +61,10 @@
 #   v1.47 - Fix Multithreaded EOFError on Download (Default is YES)   #
 #   v1.48 - Small bug Fixes & Update for Lateset AChoirX Layout       #
 #   v1.49 - Added Nirsoft Browser Downloads View                      #
+#   v1.50 - Better Error Correction.  Fix unescaped directories       #
+#         -  Move SYS utils into a single directory                   #
+#            (SBECmd, LECmd, Logparser)                               #
+#         -  Start Converting Path Separators to os.path.join         #
 ####################################################################### 
 import os
 import sys
@@ -88,11 +92,11 @@ args = parser.parse_args()
 cfgname = str(args.cfgname)
 dirname = str(args.dirname)
 dirleft, diright = os.path.split(dirname)
-dirtrge = dirname + "\\TriageReport"
-htmname = dirtrge + "\\" + diright + ".htm"
-ipsnameall = dirtrge + "\\AllIps.txt"
-domnameall = dirtrge + "\\AllDoms.txt"
-hshnameall = dirtrge + "\\AllHash.txt"
+dirtrge = os.path.join(dirname, "TriageReport")
+htmname = os.path.join(dirtrge, diright + ".htm")
+ipsnameall = os.path.join(dirtrge, "AllIps.txt")
+domnameall = os.path.join(dirtrge, "AllDoms.txt")
+hshnameall = os.path.join(dirtrge, "AllHash.txt")
 
 
 
@@ -192,19 +196,19 @@ def main():
         print("[!] Regripper Plugin NOT Found: timezone.pl")
         GotDepend = 0
 
-    if os.path.isfile("logparser.exe"):
+    if os.path.isfile(".\\SYS\\logparser.exe"):
         print("[+] LogParser Found: logparser.exe")
     else:
         print("[!] LogParser NOT Found: logparser.exe")
         GotDepend = 0
 
-    if os.path.isfile("logparser.dll"):
+    if os.path.isfile(".\\SYS\\logparser.dll"):
         print("[+] LogParser Found: logparser.dll")
     else:
         print("[!] LogParser NOT Found: logparser.dll")
         GotDepend = 0
 
-    if os.path.isfile("logparser.chm"):
+    if os.path.isfile(".\\SYS\\logparser.chm"):
         print("[+] LogParser Found: logparser.chm")
     else:
         print("[!] LogParser NOT Found: logparser.chm")
@@ -547,38 +551,38 @@ def main():
             os.remove(dirtrge + "\\ShellBags\\" + curfile)
 
     ChSwSubDir = ""
-    for ChName in glob.glob(dirtrge + '\\**\account_tampering.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\account_tampering.csv', recursive=True):
         os.remove(dirtrge + "\\" + ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(dirtrge + "\\" + ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\antivirus.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\antivirus.csv', recursive=True):
         os.remove(dirtrge + "\\" + ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(dirtrge + "\\" + ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\lateral_movement.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\lateral_movement.csv', recursive=True):
         os.remove(dirtrge + "\\" + ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(dirtrge + "\\" + ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\log_tampering.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\log_tampering.csv', recursive=True):
         os.remove(dirtrge + "\\" + ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(dirtrge + "\\" + ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\sigma.csv', recursive=True):
+    for ChName in glob.glob(dirtrge + '\\**\\sigma.csv', recursive=True):
         os.remove(dirtrge + "\\" + ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(dirtrge + "\\" + ChName)
             ChSwSubDir = Path_File[0]
 
     if ChSwSubDir != "":
-        ChSwLeftOvers = ChSwSubDir + "\\**\*.csv"
+        ChSwLeftOvers = ChSwSubDir + "\\**\\*.csv"
         for ChName in glob.glob(ChSwLeftOvers, recursive=True):
             os.remove(ChName)
         shutil.rmtree(ChSwSubDir)
@@ -754,19 +758,19 @@ def main():
             # Parse the Events                                                        #
             ###########################################################################
             print("[+] Parsing Security Event Logs...")
-            cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 1, '|') as Machine, EXTRACT_TOKEN(Strings, 5, '|') as LoginID, EXTRACT_TOKEN(Strings, 6, '|') as LoginMachine, EXTRACT_TOKEN(Strings, 8, '|') as LogonType, EXTRACT_TOKEN(Strings, 18, '|') as RemoteIP from " + dirtrge + "\\Security1.evtx where eventid=4624 AND LogonType='10'\" -i:evt -o:csv -q > " + dirtrge + "\\RDPGood.csv"
+            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 1, '|') as Machine, EXTRACT_TOKEN(Strings, 5, '|') as LoginID, EXTRACT_TOKEN(Strings, 6, '|') as LoginMachine, EXTRACT_TOKEN(Strings, 8, '|') as LogonType, EXTRACT_TOKEN(Strings, 18, '|') as RemoteIP from " + dirtrge + "\\Security1.evtx where eventid=4624 AND LogonType='10'\" -i:evt -o:csv -q > " + dirtrge + "\\RDPGood.csv"
             returned_value = os.system(cmdexec)
 
-            cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 5, '|') as LoginID from " + dirtrge + "\\Security1.evtx where eventid=4625\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4625.csv"
+            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 5, '|') as LoginID from " + dirtrge + "\\Security1.evtx where eventid=4625\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4625.csv"
             returned_value = os.system(cmdexec)
 
-            cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 0, '|') AS ServiceName, EXTRACT_TOKEN(strings, 1, '|') AS ServicePath, EXTRACT_TOKEN(strings, 4, '|') AS ServiceUser FROM " + dirtrge + "\\System1.evtx WHERE EventID = 7045\" -i:evt -o:csv -q > " + dirtrge + "\\SysEvt7045.csv"
+            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 0, '|') AS ServiceName, EXTRACT_TOKEN(strings, 1, '|') AS ServicePath, EXTRACT_TOKEN(strings, 4, '|') AS ServiceUser FROM " + dirtrge + "\\System1.evtx WHERE EventID = 7045\" -i:evt -o:csv -q > " + dirtrge + "\\SysEvt7045.csv"
             returned_value = os.system(cmdexec)
 
-            cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, SourceName, EventCategoryName, Message FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4698\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4698.csv"
+            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, SourceName, EventCategoryName, Message FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4698\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4698.csv"
             returned_value = os.system(cmdexec)
 
-            cmdexec = "LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 1, '|') as accountname, EXTRACT_TOKEN(strings, 2, '|') as domain, EXTRACT_TOKEN(strings, 5, '|') as usedaccount, EXTRACT_TOKEN(strings, 6, '|') as useddomain, EXTRACT_TOKEN(strings, 8, '|') as targetserver, EXTRACT_TOKEN(strings, 9, '|') as extradata, EXTRACT_TOKEN(strings, 11, '|') as procname, EXTRACT_TOKEN(strings, 12, '|') as sourceip FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4648\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4648.csv"
+            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 1, '|') as accountname, EXTRACT_TOKEN(strings, 2, '|') as domain, EXTRACT_TOKEN(strings, 5, '|') as usedaccount, EXTRACT_TOKEN(strings, 6, '|') as useddomain, EXTRACT_TOKEN(strings, 8, '|') as targetserver, EXTRACT_TOKEN(strings, 9, '|') as extradata, EXTRACT_TOKEN(strings, 11, '|') as procname, EXTRACT_TOKEN(strings, 12, '|') as sourceip FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4648\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4648.csv"
             returned_value = os.system(cmdexec)
 
         else:
@@ -2458,8 +2462,6 @@ def main():
 
 
 
-
-
     ###########################################################################
     # Write Program Compatibility Assistant Data (Python CSV Reader Module)   #
     ###########################################################################
@@ -2519,12 +2521,12 @@ def main():
             else:
                 outfile.write("<p>Records Found: " + str(reccount) + "</p>\n")
 
-
-            outfile.write("</div>\n")
-
         else:
             print("[!] Bypassing PCA Information (No PCA Input Data) ...")
             outfile.write("<p><b><font color = red> No PCA Input Data Found! </font></b></p>\n")
+
+        outfile.write("</div>\n")
+
 
 
     ###########################################################################
@@ -3033,7 +3035,7 @@ def main():
 
         print("[+] Checking for Eric Zimmerman LECmd Link Parser...")
 
-        if os.path.isfile(".\\LECmd.exe") == False:
+        if os.path.isfile(".\\SYS\\LECmd.exe") == False:
             print("[?] LECmd executable not found...  Would you like to Download it...")
             YesOrNo = "Y"
             try:
@@ -3042,20 +3044,20 @@ def main():
                 YesOrNo ="Y"
 
             if YesOrNo.upper() == "Y":
-                print("[+] Downloading LECmd from Eric Zimmerman Web Site...")
-                LECUrl = 'https://f001.backblazeb2.com/file/EricZimmermanTools/LECmd.zip'
+                print("[+] Downloading LECmd from MikeStammer Web Site...")
+                LECUrl = 'https://download.mikestammer.com/net6/LECmd.zip'
                 LECReq = requests.get(LECUrl, allow_redirects=True)
-                open('LECmd.zip', 'wb').write(LECReq.content)
+                open('.\\SYS\\LECmd.zip', 'wb').write(LECReq.content)
 
                 print("[+] Unzipping LECmd...")
-                with ZipFile('LECmd.zip', 'r') as zipObj:
+                with ZipFile('.\\SYS\\LECmd.zip', 'r') as zipObj:
                     # Extract all the contents of zip file in current directory
                     zipObj.extractall()
             else:
                 print("[!] LECmd Download Bypassed...")
 
 
-        exeName = ".\\LECmd.exe"
+        exeName = ".\\SYS\\LECmd.exe"
         if os.path.isfile(exeName):
             print("[+] LECmd executable found")
             print("[+] Parsing Desktop and Recent LNK Files from Multiple User Profiles...")
@@ -3517,25 +3519,28 @@ def main():
 
                     # XML Files are actually UTF16 - but if a rogue UTF8 file is present
                     # this routine will read it.
-                    innfile = open(curfile, encoding='utf8', errors="replace")
-                    for innline in innfile:
-                        # Clean up the string by removing any unicode x00
-                        text_innline = innline.replace('\x00', '')
-                        strip_innline = text_innline.strip()
+                    try:
+                        innfile = open(curfile, encoding='utf8', errors="replace")
+                        for innline in innfile:
+                            # Clean up the string by removing any unicode x00
+                            text_innline = innline.replace('\x00', '')
+                            strip_innline = text_innline.strip()
 
-                        if strip_innline.startswith("<URI>"):
-                            task_URI = strip_innline[5:]
+                            if strip_innline.startswith("<URI>"):
+                                task_URI = strip_innline[5:]
 
-                        elif strip_innline.startswith("<Command>"):
-                            task_Command = strip_innline[9:]
+                            elif strip_innline.startswith("<Command>"):
+                                task_Command = strip_innline[9:]
 
-                        elif strip_innline.startswith("TaskName:"):
-                            task_URI = strip_innline[9:]
+                            elif strip_innline.startswith("TaskName:"):
+                                task_URI = strip_innline[9:]
 
-                        elif strip_innline.startswith("Task To Run:"):
-                            task_Command = strip_innline[12:]
+                            elif strip_innline.startswith("Task To Run:"):
+                                task_Command = strip_innline[12:]
 
-                    innfile.close()
+                        innfile.close()
+                    except Exception as e:
+                        print(f"[!] Error Openning XML File: {e}")
 
                     # Is it in our IOC List?
                     RowString = task_URI + task_Command 
@@ -3859,7 +3864,7 @@ def main():
     if (RunAllAll == 1 or RunShlBag == 1):
         print("[+] Checking for Eric Zimmerman SBECmd...")
 
-        if os.path.isfile(".\\SBECmd\\SBECmd.exe") == False:
+        if os.path.isfile(".\\SYS\\SBECmd.exe") == False:
             print("[?] Shell Bags Explorer - SBECmd executable not found...  Would you like to Download it...")
             YesOrNo = "Y"
 
@@ -3869,31 +3874,27 @@ def main():
                 YesOrnNo = "Y"
 
             if YesOrNo.upper() == "Y":
-                print("[+] Downloading Eric Zimmerman Shell Bags Explorer...")
+                print("[+] Downloading Eric Zimmerman Shell Bags Explorer from Velociraptor...")
 
-                if not os.path.exists('.\\SBECMD'):
-                    os.makedirs('.\\SBECMD')
+                if not os.path.exists('.\\SYS'):
+                    os.makedirs('.\\SYS')
 
-                ShlBUrl = 'https://f001.backblazeb2.com/file/EricZimmermanTools/SBECmd.zip'
+                ShlBUrl = 'https://github.com/Velocidex/Tools/raw/main/SBECmd/ShellBagsExplorer/SBECmd.exe'
                 ShlBReq = requests.get(ShlBUrl, allow_redirects=True)
-                open('.\\SBECmd\\SBECmd.zip', 'wb').write(ShlBReq.content)
+                open('.\\SYS\\SBECmd.exe', 'wb').write(ShlBReq.content)
 
-                print("[+] Unzipping Shell Bags Explorer - SBECmd...")
-                with ZipFile('.\\SBECMD\\SBECmd.zip', 'r') as zipObj:
-                    # Extract all the contents of zip file in current directory
-                    zipObj.extractall(path='.\\SBECmd')
             else:
                 print("[!] Shell Bags Explorer Download Bypassed...")
 
 
-        if os.path.isfile(".\\SBECmd\\SBECmd.exe"):
+        if os.path.isfile(".\\SYS\\SBECmd.exe"):
             print("[+] Shell Bags Explorer executable found")
             print("[+] Running Shell Bags Explorer against all Collection directories...")
 
             ShlBSubDir = ""
 
             ShlName = dirname + ShelBag
-            cmdexec = ".\\SBECMD\\SBECmd.exe -d " + ShlName + " --csv " + dirtrge + "\\ShellBags --nl --dt \"yyyy-MM-dd HH:mm:ss K\""
+            cmdexec = ".\\SYS\\SBECmd.exe -d " + ShlName + " --csv " + dirtrge + "\\ShellBags --nl --dt \"yyyy-MM-dd HH:mm:ss K\""
             returned_value = os.system(cmdexec)
 
 
