@@ -9,7 +9,10 @@
 #   v0.01 - Basic Ideas                                               #
 #   v0.02 - Add SRUM                                                  #
 #   v0.03 - Add NoData fields if the input is blank                   #
-#   v0.04 - Further refinements                                       #
+#   v0.04 - Further refinements - replace hard paths with os.path.join#
+#           This is for eventual cross platform support               #
+#           IMPORTANT NOTE: removing preceeding path separators [1:]  #
+#           was REQUIRED to make os.path.join work properly           #
 ####################################################################### 
 import os, stat
 import sys
@@ -37,7 +40,7 @@ args = parser.parse_args()
 cfgname = str(args.cfgname)
 dirname = str(args.dirname)
 dirleft, diright = os.path.split(dirname)
-dirtrge = dirleft + "\\Timelines\\" + diright
+dirtrge = os.path.join(dirleft, "Timelines", diright)
 
 
 ###########################################################################
@@ -55,7 +58,7 @@ def main():
         sys.exit(1)
 
 
-    print("[+] Root Timeline Dir: \\Timelines\\" + diright)
+    print("[+] Root Timeline Dir: " + os.path.join("Timelines", diright))
     print("[+] Triage Directory: " + dirtrge)
 
 
@@ -81,18 +84,18 @@ def main():
     SrcMFT = SrcEvtx = SrcPrf = SrcLAct = SrcLnkPrs = SrcSrum = 1  # For Future Use
 
     Collect = "AChoirX"
-    MFTFile = "\\RawData\\MFT-C"
-    Prefetc = "\\Prf"
-    PCAsist = "\\PCA"
-    LNKFile = "\\Lnk"
-    LastAct = "\\Sys\\LastActivity.csv"
-    Browser = "\\Brw\\BrowseHist.csv"
-    Downlod = "\\Brw\\BrowseDown.csv"
-    AutoRun = "\\Arn\\AutoRun.dat"
-    EvtDir1 = "\\Evt\\WINDOWS\\System32\\winevt\\Logs"
-    EvtDir2 = "\\WINDOWS\\Native\\winevt\\Logs"
-    SrumDir = "\\Sys\\Sys32\\sru"
-    SysRegs = "\\Reg\\Config"
+    MFTFile = os.path.join("RawData", "MFT-C")
+    Prefetc = "Prf"
+    PCAsist = "PCA"
+    LNKFile = "Lnk"
+    LastAct = os.path.join("Sys", "LastActivity.csv")
+    Browser = os.path.join("Brw", "BrowseHist.csv")
+    Downlod = os.path.join("Brw", "BrowseDown.csv")
+    AutoRun = os.path.join("Arn", "AutoRun.dat")
+    EvtDir1 = os.path.join("Evt", "WINDOWS", "System32", "winevt", "Logs")
+    EvtDir2 = os.path.join("WINDOWS", "Native", "winevt", "Logs")
+    SrumDir = os.path.join("Sys", "Sys32", "sru")
+    SysRegs = os.path.join("Reg", "Config")
     PreConv = ""
     Brander = ""
 
@@ -149,7 +152,7 @@ def main():
 
             elif cfgline.startswith("Browser:"):
                 Browser = cfgline[8:].strip()
-                Downlod = os.path.dirname(Browser) + "\\BrowseDown.csv"
+                Downlod = os.path.join(os.path.dirname(Browser), "BrowseDown.csv")
                 print("[+] Browser History: " + Browser)
                 print("[+] Browser Downloads: " + Downlod)
 
@@ -222,38 +225,38 @@ def main():
     returned_value = os.system("mkdir " + dirtrge)
 
     ChSwSubDir = ""
-    for ChName in glob.glob(dirtrge + '\\**\\account_tampering.csv', recursive=True):
+    for ChName in glob.glob(os.path.join(dirtrge,  "**", "account_tampering.csv"), recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\antivirus.csv', recursive=True):
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "antivirus.csv"), recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\lateral_movement.csv', recursive=True):
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "lateral_movement.csv"), recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\log_tampering.csv', recursive=True):
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "log_tampering.csv"), recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\sigma.csv', recursive=True):
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "sigma.csv"), recursive=True):
         os.remove(ChName)
         if ChSwSubDir == "":
             Path_File = os.path.split(ChName)
             ChSwSubDir = Path_File[0]
 
     if ChSwSubDir != "":
-        ChSwLeftOvers = ChSwSubDir + "\\**\\*.csv"
+        ChSwLeftOvers = os.path.join(ChSwSubDir, "**", "*.csv")
         for ChName in glob.glob(ChSwLeftOvers, recursive=True):
             os.remove(ChName)
         shutil.rmtree(ChSwSubDir)
@@ -264,7 +267,7 @@ def main():
     ###########################################################################
     print("[+] Stabilizing Files...")
 
-    SRUFile = dirname + SrumDir + "\\SRUDB.dat"
+    SRUFile = os.path.join(dirname, SrumDir[1:], "SRUDB.dat")
     print("[+] Duplicating SRUM Directory/Files...")
 
     ###########################################################################
@@ -272,23 +275,23 @@ def main():
     ###########################################################################
     if os.path.isfile(SRUFile):
         # New Version used Python shutil
-        srum_files = glob.glob(dirname + "\\Cache\\*")
+        srum_files = glob.glob(os.path.join(dirname, "Cache", "*"))
         for srumfile in srum_files:
             os.chmod(srumfile, stat.S_IWRITE)
             os.remove(srumfile)
 
-        srum_files = glob.glob(dirname + "\\Cache\\*.*")
+        srum_files = glob.glob(os.path.join(dirname, "Cache", "*.*"))
         for srumfile in srum_files:
             os.chmod(srumfile, stat.S_IWRITE)
             os.remove(srumfile)
 
-        srum_files = glob.glob(dirname + SrumDir + "\\*.*")
+        srum_files = glob.glob(os.path.join(dirname, SrumDir[1:], "*.*"))
         for srumfile in srum_files:
-            shutil.copy(srumfile, dirname + "\\Cache\\")
+            shutil.copy(srumfile, os.path.join(dirname, "Cache"))
 
-        shutil.copy( dirname + SysRegs + "\\SOFTWARE", dirname + "\\Cache\\")
+        shutil.copy(os.path.join(dirname, SysRegs[1:], "SOFTWARE"), os.path.join(dirname, "Cache"))
 
-        srum_files = glob.glob(dirname + "\\Cache\\*.*")
+        srum_files = glob.glob(os.path.join(dirname, "Cache", "*.*"))
         for srumfile in srum_files:
             os.chmod(srumfile, stat.S_IWRITE)
 
@@ -310,7 +313,7 @@ def main():
     ###########################################################################
     # Create System Information Timesketch CSV                                #
     ###########################################################################
-    filnout = dirtrge + "\\ts_system.csv"
+    filnout = os.path.join(dirtrge, "ts_system.csv")
     csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
     csvoutf.write("\"datetime\",\"message\",\"timestamp_desc\",\"data_type\"\n")
     csvoutf.write("\"" + datetime.datetime.now(datetime.timezone.utc).isoformat() + "\",\"Initial Timesketch Load\",\"autorun_date\",\"system:runtime\"\n")
@@ -322,14 +325,14 @@ def main():
     ###########################################################################
     if RunAllAll == 1 or SrcPrf == 1:
         print("[+] Generating Prefetch Data...")
-        exeName = dirleft + "\\SYS\\WinPrefetchView.exe"
+        exeName = os.path.join(dirleft, "SYS", "WinPrefetchView.exe")
 
         if os.path.isfile(exeName):
-            if os.path.isdir(dirname + Prefetc):
-                cmdexec = dirleft + "\\SYS\\WinPrefetchView.exe /folder " + dirname + Prefetc + " /scomma  " + dirtrge + "\\WinPrefetchview.csv"
+            if os.path.isdir(os.path.join(dirname, Prefetc[1:])):
+                cmdexec = exeName + " /folder " + os.path.join(dirname, Prefetc[1:]) + " /scomma  " + os.path.join(dirtrge, "WinPrefetchview.csv")
                 returned_value = os.system(cmdexec)
             else:
-                print("[!] Prefetch Data Not Found in the Collection: " + dirname + Prefetc)
+                print("[!] Prefetch Data Not Found in the Collection: " + os.path.join(dirname, Prefetc[1:]))
                 SrcPrf = 0
         else:
             print("[!] WinPrefetchView Not Found...")
@@ -339,8 +342,8 @@ def main():
         # Transform Prefetch CSV for Timesketch                                    #
         ###########################################################################
         reccount = 0
-        filname = dirtrge + "\\WinPrefetchview.csv"
-        filnout = dirtrge + "\\ts_prefetchview.csv"
+        filname = os.path.join(dirtrge, "WinPrefetchview.csv")
+        filnout = os.path.join(dirtrge, "ts_prefetchview.csv")
 
         if os.path.isfile(filname):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
@@ -395,8 +398,8 @@ def main():
         print("[+] Transforming Autoruns Information...")
 
         reccount = 0
-        filname = dirname + AutoRun
-        filnout = dirtrge + "\\ts_autoruns.csv"
+        filname = os.path.join(dirname, AutoRun[1:])
+        filnout = os.path.join(dirtrge, "ts_autoruns.csv")
 
         if os.path.isfile(filname):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
@@ -453,9 +456,9 @@ def main():
             csvoutf.close()
 
         else:
-            print("[!] Bypassing Browser History Transform (No Input Data) ...")
+            print("[!] Bypassing Autoruns Transform (No Input Data) ...")
     else:
-        print("[!] Bypassing Browser History Transform (No Input Data) ...")
+        print("[!] Bypassing Autoruns Transform (No Input Data) ...")
 
 
     ###########################################################################
@@ -467,16 +470,21 @@ def main():
         print("[+] Checking for Eric Zimmerman LECmd Link Parser...")
 
         reccount = 0
-        filname = dirtrge + "\\LNKFiles.csv"
-        filnout = dirtrge + "\\ts_lnkfiles.csv"
+        filname = os.path.join(dirtrge, "LNKFiles.csv")
+        filnout = os.path.join(dirtrge, "ts_lnkfiles.csv")
 
-        exeName = ".\\SYS\\LECmd.exe"
+        exeName = os.path.join(dirleft, "SYS", "LECmd.exe")
         if os.path.isfile(exeName):
             print("[+] LECmd executable found")
             print("[+] Parsing Desktop and Recent LNK Files from Multiple User Profiles...")
 
-            curdir = dirname + LNKFile
+            ###########################################################################
+            # os.path.join will not work if LNKFile starts with a path separator      #
+            # - use [1:] to ignore path separator                                     #
+            ###########################################################################
+            curdir = os.path.join(dirname, LNKFile[1:])
             cmdexec = exeName + " -q -d " + curdir + " --dt \"yyyy-MM-dd HH:mm:ss K\" --csv " + dirtrge + " --csvf " + filname 
+
             returned_value = os.system(cmdexec)
 
             print("[+] Reading Desktop and Recent LNK Files from Multiple User Profiles...")
@@ -557,8 +565,12 @@ def main():
         print("[+] Transforming Last Activity View Information...")
 
         reccount = 0
-        filname = dirname + LastAct
-        filnout = dirtrge + "\\ts_lastact.csv"
+        ###########################################################################
+        # os.path.join will not work if LastAct starts with a path separator      #
+        # - use [1:] to ignore path separator                                     #
+        ###########################################################################
+        filname = os.path.join(dirname, LastAct[1:])
+        filnout = os.path.join(dirtrge, "ts_lastact.csv")
 
         if os.path.isfile(filname):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
@@ -617,8 +629,12 @@ def main():
         print("[+] Transforming File and Web Browser Information...")
 
         reccount = 0
-        filname = dirname + Browser
-        filnout = dirtrge + "\\ts_browsehist.csv"
+        ###########################################################################
+        # os.path.join will not work if Browser starts with a path separator      #
+        # - use [1:] to ignore path separator                                     #
+        ###########################################################################
+        filname = os.path.join(dirname, Browser[1:])
+        filnout = os.path.join(dirtrge, "ts_browsehist.csv")
 
         if os.path.isfile(filname):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
@@ -693,8 +709,12 @@ def main():
         print("[+] Transforming File and Web Browser Downloads...")
 
         reccount = 0
-        filname = dirname + Downlod
-        filnout = dirtrge + "\\ts_browsedown.csv"
+        ###########################################################################
+        # os.path.join will not work if Downlod starts with a path separator      #
+        # - use [1:] to ignore path separator                                     #
+        ###########################################################################
+        filname = os.path.join(dirname, Downlod[1:])
+        filnout = os.path.join(dirtrge, "ts_browsedown.csv")
 
         if os.path.isfile(filname):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
@@ -764,22 +784,22 @@ def main():
     ###########################################################################
     if RunAllAll == 1 or SrcSrum == 1:
         print("[+] Generating SRUM Data...")
-        exeName = dirleft + "\\SYS\\SrumECmd.exe"
+        exeName = os.path.join(dirleft, "SYS", "SrumECmd.exe")
 
         if os.path.isfile(exeName):
-            if os.path.isdir(dirname + SrumDir) and os.path.isfile(dirname + SysRegs + "\\SOFTWARE"):
-                cmdexec = dirleft + "\\SYS\\SrumECmd.exe -d " + dirname + "\\Cache -r " + dirname + "\\Cache\\SOFTWARE --csv " + dirtrge + "\\SRUM"
+            if os.path.isdir(os.path.join(dirname, SrumDir[1:])) and os.path.isfile(os.path.join(dirname, SysRegs[1:], "SOFTWARE")):
+                cmdexec = exeName + " -d " + os.path.join(dirname, "Cache") + " -r " + os.path.join(dirname, "Cache", "SOFTWARE") + " --csv " + os.path.join(dirtrge, "SRUM")
                 returned_value = os.system(cmdexec)
 
                 ###########################################################################
                 # Transform Just the Network activity for Timesketch                      #
                 ###########################################################################
-                
-                for curfile in os.listdir(dirtrge + "\\SRUM"):
+                print("[+] Processing SRUM Network Usage: SrumECmd_NetworkUsages_Output.csv")
+                for curfile in os.listdir(os.path.join(dirtrge, "SRUM")):
                     if curfile.endswith("SrumECmd_NetworkUsages_Output.csv"):
                         reccount = 0
-                        filname = dirtrge + "\\SRUM\\" + curfile
-                        filnout = dirtrge + "\\ts_srumnetusage.csv"
+                        filname = os.path.join(dirtrge, "SRUM", curfile)
+                        filnout = os.path.join(dirtrge, "ts_srumnetusage.csv")
 
                         csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
                         with open(filname, 'r', encoding='utf8', errors="replace") as csvfile:
@@ -814,7 +834,7 @@ def main():
                                     reccount = reccount + 1
 
                         if reccount < 2:
-                            print("[!] No Records Processed: " + dirname)
+                            print("[!] No Records Processed For: SrumECmd_NetworkUsages_Output.csv")
                             csvoutf.write("\""
                                          + "NoData" + "\",\"" + "1900-01-01T19:01:01" + "\",\"" + "No Data Parsed From Input" + "\",\""
                                          + "NoData" + "\",\"" + "NoData" + "\",\""
@@ -851,9 +871,9 @@ def main():
     if (RunAllAll == 1 or RunChnSaw == 1) and SrcEvtx == 1:
         print("[+] Checking for F-Secure Countercept Chainsaw...")
 
-        filnout = dirtrge + "\\ts_chainsaw.csv"
+        filnout = os.path.join(dirtrge, "ts_chainsaw.csv")
 
-        if os.path.isfile(".\\chainsaw\\chainsaw_x86_64-pc-windows-msvc.exe") == False:
+        if os.path.isfile(os.path.join(dirleft, "chainsaw", "chainsaw_x86_64-pc-windows-msvc.exe")) == False:
             print("[?] Chainsaw executable not found...  Would you like to Download F-Secure Countercept...")
             YesOrNo = "Y"
             try:
@@ -875,7 +895,7 @@ def main():
                 print("[!] Chainsaw Download Bypassed...")
 
 
-        if os.path.isfile(".\\chainsaw\\chainsaw_x86_64-pc-windows-msvc.exe"):
+        if os.path.isfile(os.path.join(dirleft, "chainsaw", "chainsaw_x86_64-pc-windows-msvc.exe")):
             csvoutf = open(filnout, "w", encoding='utf8', errors="replace")
 
             print("[+] Chainsaw executable found")
@@ -883,8 +903,12 @@ def main():
 
             ChSwSubDir = ""
 
-            EvtName = dirname + EvtDir1
-            cmdexec = ".\\chainsaw\\chainsaw_x86_64-pc-windows-msvc.exe hunt " + " --skip-errors --timezone UTC --full --csv --output " + dirtrge + "\\ChainCSV --mapping .\\chainsaw\\mappings\\sigma-event-logs-all.yml --rule .\\chainsaw\\rules --sigma .\\chainsaw\\sigma " + EvtName
+            ###########################################################################
+            # os.path.join will not work if EVTDir1 starts with a path separator      #
+            # - use [1:] to ignore path separator                                     #
+            ###########################################################################
+            EvtName = os.path.join(dirname, EvtDir1[1:])
+            cmdexec = os.path.join(dirleft, "chainsaw", "chainsaw_x86_64-pc-windows-msvc.exe") + " hunt " + " --skip-errors --timezone UTC --full --csv --output " + os.path.join(dirtrge, "ChainCSV") + " --mapping " + os.path.join(dirleft, "chainsaw", "mappings", "sigma-event-logs-all.yml") + " --rule " + os.path.join(dirleft, "chainsaw", "rules") + " --sigma " + os.path.join(dirleft, "chainsaw", "sigma") + " " + EvtName
             returned_value = os.system(cmdexec)
 
             ###########################################################################
@@ -920,7 +944,7 @@ def main():
             ###########################################################################
             # Chainsaw: Sigma Detections                                              #
             ###########################################################################
-            for ChName in glob.glob(dirtrge + '\\**\\sigma.csv', recursive=True):
+            for ChName in glob.glob(os.path.join(dirtrge, "**", "sigma.csv"), recursive=True):
                 reccount = 0
                 with open(ChName, 'r', encoding='utf8', errors="replace") as csvfile:
                     csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=',')
@@ -989,7 +1013,7 @@ def main():
     if (RunAllAll == 1 or RunChnSaw == 1) and SrcEvtx == 1:
         print("[+] Checking for Yamato-Security/hayabusa...")
 
-        if os.path.isfile(".\\hayabusa\\hayabusa-2.15.0-win-x64.exe") == False:
+        if os.path.isfile(os.path.join(dirleft, "hayabusa", "hayabusa-2.15.0-win-x64.exe")) == False:
             print("[?] Hayabusa executable not found...  Would you like to Download hayabusa 2.15.0...")
             YesOrNo = "Y"
 
@@ -1007,7 +1031,7 @@ def main():
                 print("[+] Unzipping Hayabusa...")
                 with ZipFile('Hayabusa.zip', 'r') as zipObj:
                     # Extract all the contents of zip file in current directory
-                    zipObj.extractall(path=".\\hayabusa")
+                    zipObj.extractall(path=os.path.join(dirleft, "hayabusa"))
             else:
                 print("[!] Hayabusa Download Bypassed...")
 
@@ -1015,14 +1039,14 @@ def main():
         ###########################################################################
         # Hayabusa: Writes CSV in Timesketch format - not need for Transform      #
         ###########################################################################
-        if os.path.isfile(".\\hayabusa\\hayabusa-2.15.0-win-x64.exe"):
+        if os.path.isfile(os.path.join(dirleft, "hayabusa\\hayabusa-2.15.0-win-x64.exe")):
             print("[+] Hayabusa executable found")
             print("[+] Running Hayabusa against all Event Logs...")
 
             ChSwSubDir = ""
-            EvtName = dirname + EvtDir1
-            returned_value = os.system("mkdir " + dirtrge + "\\Hayabusa")
-            cmdexec = ".\\hayabusa\\hayabusa-2.15.0-win-x64.exe csv-timeline -w --UTC -d " + EvtName + " -o " + dirtrge + "\\Hayabusa\\ts_Hayabusa.csv -p timesketch-verbose --ISO-8601"
+            EvtName = os.path.join(dirname, EvtDir1[1:])
+            returned_value = os.system("mkdir " + os.path.join(dirtrge, "Hayabusa"))
+            cmdexec = os.path.join(dirleft, "hayabusa", "hayabusa-2.15.0-win-x64.exe") + " csv-timeline -w --UTC -d " + EvtName + " -o " + os.path.join(dirtrge, "Hayabusa", "ts_Hayabusa.csv") + " -p timesketch-verbose --ISO-8601"
             returned_value = os.system(cmdexec)
 
             # Old version uses OS Copy
@@ -1030,7 +1054,7 @@ def main():
             # returned_value = os.system(cmdexec)
 
             # New Version used Python shutil
-            shutil.copy(dirtrge + "\\Hayabusa\\ts_Hayabusa.csv", dirtrge + "\\")
+            shutil.copy(os.path.join(dirtrge, "Hayabusa", "ts_Hayabusa.csv"), dirtrge)
 
         else:
             print("[!] Hayabusa Executable not found!  Bypassing Hayabusa Processing...")
