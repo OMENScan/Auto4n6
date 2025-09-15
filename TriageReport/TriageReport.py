@@ -18,8 +18,8 @@
 #                  ActiveState-LICENSE                                #
 #   v0.85 - Recognize Root Dir of AChoir.  Replace Static Calls to    #
 #           The C:\AChoir Directory, with the parsed Root Dir.  This  #
-#           allows AChReport to Run from AChoir on other Drives       #
-#   v0.86 - AChoir 2.8 now supports pathing - Modify AChReport to     #
+#           allows TriageReport to Run from AChoir on other Drives    #
+#   v0.86 - AChoir 2.8 now supports pathing - Modify TriageReport to  #
 #           Gather data from dirs and subdirs using os.walk           #
 #   v0.87 - Add Launch String for Autoruns.  Add Check for 7045       #
 #            (Service Installed), and 4698 (New Sched Task) Events    #
@@ -35,7 +35,7 @@
 #   v0.95 - Add Configuration File (Select Report Sections to Run)    #
 #   v0.96 - Add some error correction if Source files are missing     #
 #   v0.97 - Add Regripper AmCache Parser                              #
-#   v0.98 - Integrate F-Secure Countercept ChainSaw with AChReport    #
+#   v0.98 - Integrate F-Secure Countercept ChainSaw with TriageReport #
 #   v0.99 - Pre-Cleanup Any Leftover Files                            #
 #   v0.99a - Bug deleting directory when there is no Chainsaw output  #
 #   v0.99b - Add DNSCache ouput from veloceraptor                     #
@@ -46,7 +46,7 @@
 #   v0.99g - Shell Bags Processing using Eric Zimmerman's SBECmd      #
 #   v0.99h - Make Tables Sortable, Add TZ Information                 #
 #            Convert to latest version of Chainsaw                    #
-#   v1.00 - Merge of AChReport and VelReport into TriageReport        #
+#   v1.00 - Merge of TriageReport and VelReport into TriageReport     #
 #   v1.10 - Improvements in IOC Reporting                             #
 #   v1.20 - Add Windows 11 Program Compatiblity Assistant Artifact    #
 #   v1.40 - Add Sec EventID 4648  - Logon Attemp with Explicit Creds  #
@@ -64,7 +64,8 @@
 #   v1.50 - Better Error Correction.  Fix unescaped directories       #
 #         -  Move SYS utils into a single directory                   #
 #            (SBECmd, LECmd, Logparser)                               #
-#         -  Start Converting Path Separators to os.path.join         #
+#   v1.51 -  Convert Path Separators to os.path.join                  #
+#         -  Replace OS Copy with shutil copy                         #
 ####################################################################### 
 import os
 import sys
@@ -132,83 +133,76 @@ def main():
     # Checking for RegRipper Plugins (They have to be in the working subdir)  #
     ###########################################################################
     print("[+] Checking Software Dependencies...")
-    if os.path.isfile(".\plugins\compname.pl"):
-        print("[+] AChReport Regripper Plugin directory Found!")
+    if os.path.isfile(os.path.join(dirleft, "plugins", "compname.pl")):
+        print("[+] TriageReport Regripper Plugin directory Found!")
     else:
-        print("[*] Copying Regripper Plugins From AChoir Install...")
-        returned_value = os.system("mkdir plugins")
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\compname.pl .\\plugins\\compname.pl"
-        returned_value = os.system(cmdexec)
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\shellfolders.pl .\\plugins\\shellfolders.pl"
-        returned_value = os.system(cmdexec)
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\userassist.pl .\\plugins\\userassist.pl"
-        returned_value = os.system(cmdexec)
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\source_os.pl .\\plugins\\source_os.pl"
-        returned_value = os.system(cmdexec)
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\winver.pl .\\plugins\\winver.pl"
-        returned_value = os.system(cmdexec)
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\amcache.pl .\\plugins\\amcache.pl"
-        returned_value = os.system(cmdexec)
-        cmdexec = "Copy " + dirleft + "\\RRV\\RegRipper3.0-master\\plugins\\timezone.pl .\\plugins\\timezone.pl"
-        returned_value = os.system(cmdexec)
+        print("[*] Copying Regripper Plugins to plugins directory...")
+        os.makedirs(os.path.join(dirleft, "plugins"), exist_ok=True)
 
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "compname.pl"), os.path.join(dirleft, "plugins", "compname.pl"))
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "shellfolders.pl"), os.path.join(dirleft, "plugins", "shellfolders.pl"))
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "userassist.pl"), os.path.join(dirleft, "plugins", "userassist.pl"))
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "source_os.pl"), os.path.join(dirleft, "plugins", "source_os.pl"))
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "winver.pl"), os.path.join(dirleft, "plugins", "winver.pl"))
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "amcache.pl"), os.path.join(dirleft, "plugins", "amcache.pl"))
+        shutil.copy(os.path.join(dirleft, "RRV", "RegRipper3.0-master", "plugins", "timezone.pl"), os.path.join(dirleft, "plugins", "timezone.pl"))
 
     GotDepend = 1
-    if os.path.isfile(".\\plugins\\compname.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "compname.pl")):
         print("[+] Regripper Plugin Found: compname.pl")
     else:
         print("[!] Regripper Plugin NOT Found: compname.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\plugins\\shellfolders.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "shellfolders.pl")):
         print("[+] Regripper Plugin Found: shellfolders.pl")
     else:
         print("[!] Regripper Plugin NOT Found: shellfolders.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\plugins\\userassist.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "userassist.pl")):
         print("[+] Regripper Plugin Found: userassist.pl")
     else:
         print("[!] Regripper Plugin NOT Found: userassist.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\plugins\\source_os.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "source_os.pl")):
         print("[+] Regripper Plugin Found: source_os.pl")
     else:
         print("[!] Regripper Plugin NOT Found: source_os.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\plugins\\winver.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "winver.pl")):
         print("[+] Regripper Plugin Found: winver.pl")
     else:
         print("[!] Regripper Plugin NOT Found: winver.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\plugins\\amcache.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "amcache.pl")):
         print("[+] Regripper Plugin Found: amcache.pl")
     else:
         print("[!] Regripper Plugin NOT Found: amcache.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\plugins\\timezone.pl"):
+    if os.path.isfile(os.path.join(dirleft, "plugins", "timezone.pl")):
         print("[+] Regripper Plugin Found: timezone.pl")
     else:
         print("[!] Regripper Plugin NOT Found: timezone.pl")
         GotDepend = 0
 
-    if os.path.isfile(".\\SYS\\logparser.exe"):
+    if os.path.isfile(os.path.join(dirleft, "SYS","logparser.exe")):
         print("[+] LogParser Found: logparser.exe")
     else:
         print("[!] LogParser NOT Found: logparser.exe")
         GotDepend = 0
 
-    if os.path.isfile(".\\SYS\\logparser.dll"):
+    if os.path.isfile(os.path.join(dirleft, "SYS", "logparser.dll")):
         print("[+] LogParser Found: logparser.dll")
     else:
         print("[!] LogParser NOT Found: logparser.dll")
         GotDepend = 0
 
-    if os.path.isfile(".\\SYS\\logparser.chm"):
+    if os.path.isfile(os.path.join(dirleft, "SYS", "logparser.chm")):
         print("[+] LogParser Found: logparser.chm")
     else:
         print("[!] LogParser NOT Found: logparser.chm")
@@ -234,29 +228,35 @@ def main():
     SrcAmCTxt = SrcLnkPrs = SrcPwsLog = 0
 
     Collect = "AChoirX"
-    MFTFile = "\\RawData\\MFT-C"
-    RegSoft = "\\Reg\\SOFTWARE"
-    RegSyst = "\\Reg\\SYSTEM"
-    RegUser = "\\Reg"
-    AmCache = "\\Reg\\AmCache.hve"
-    Prefetc = "\\Prf"
-    EvtDir1 = "\\evt\\sys32"
-    EvtDir2 = "\\evt\\nativ"
-    Recycle = "\\RBin"
-    Browser = "\\Brw\\BrowseHist.csv"
-    Downlod = "\\Brw\\BrowseDown.csv"
-    IPConns = "\\Sys\\Cports.csv"
-    IPConn2 = "\\Sys\\Netstat-abno.dat"
-    UsrAsst = "\\Sys\\UserAssist.csv"
-    Powersh = "\\Psh"
-    LNKFile = "\\Lnk"
-    AutoRun = "\\Arn\\AutoRun.dat"
-    SchTsk1 = "\\Sch"
-    SchTsk2 = "\\C\\Windows\\System32\\Tasks"
-    DNSIpcf = "\\Sys\\IPCfgDNS.dat"
-    DNSCach = "\\Sys\\DNSCache.csv"
-    ShelBag = "\\Reg"
-    PCAsist = "\\PCA"
+    MFTFile = os.path.join("RawData", "MFT-C")
+    Prefetc = "Prf"
+    PCAsist = "PCA"
+    LNKFile = "Lnk"
+    RegUser = "Reg"
+    Recycle = "RBin"
+    Powersh = "Psh"
+    SchTsk1 = "Sch"
+    ShelBag = "Reg"
+
+    LastAct = os.path.join("Sys", "LastActivity.csv")
+    Browser = os.path.join("Brw", "BrowseHist.csv")
+    Downlod = os.path.join("Brw", "BrowseDown.csv")
+    AutoRun = os.path.join("Arn", "AutoRun.dat")
+    EvtDir1 = os.path.join("Evt", "WINDOWS", "System32", "winevt", "Logs")
+    EvtDir2 = os.path.join("WINDOWS", "Native", "winevt", "Logs")
+    SrumDir = os.path.join("Sys", "Sys32", "sru")
+    SysRegs = os.path.join("Reg", "Config")
+
+    RegSoft = os.path.join("Reg", "SOFTWARE")
+    RegSyst = os.path.join("Reg", "SYSTEM")
+    AmCache = os.path.join("Reg", "AmCache.hve")
+    IPConns = os.path.join("Sys", "Cports.csv")
+    IPConn2 = os.path.join("Sys", "Netstat-abno.dat")
+    UsrAsst = os.path.join("Sys", "UserAssist.csv")
+    SchTsk2 = os.path.join("C", "Windows", "System32", "Tasks")
+    DNSIpcf = os.path.join("Sys", "IPCfgDNS.dat")
+    DNSCach = os.path.join("Sys", "DNSCache.csv")
+
     PreConv = ""
     Brander = ""
 
@@ -417,7 +417,7 @@ def main():
 
             elif cfgline.startswith("Browser:"):
                 Browser = cfgline[8:].strip()
-                Downlod = os.path.dirname(Browser) + "\\BrowseDown.csv"
+                Downlod = os.path.join(os.path.dirname(Browser), "BrowseDown.csv")
                 print("[+] Browser History: " + Browser)
                 print("[+] Browser Downloads: " + Downlod)
 
@@ -499,90 +499,90 @@ def main():
     # Pre-Cleanup to delete any Leftover temp files from failed runs
     ###########################################################################
     print("[+] Now Deleting old report temp files...")
-    returned_value = os.system("mkdir " + dirtrge)
+    os.makedirs(dirtrge, exist_ok=True)
 
-    if os.path.isfile(dirtrge + "\\Security.evtx"):
-        os.remove(dirtrge + "\\Security.evtx")
-    if os.path.isfile(dirtrge + "\\Security1.evtx"):
-        os.remove(dirtrge + "\\Security1.evtx")
-    if os.path.isfile(dirtrge + "\\System.evtx"):
-        os.remove(dirtrge + "\\System.evtx")
-    if os.path.isfile(dirtrge + "\\System1.evtx"):
-        os.remove(dirtrge + "\\System1.evtx")
-    if os.path.isfile(dirtrge + "\\SysInfo.dat"):
-        os.remove(dirtrge + "\\SysInfo.dat")
-    if os.path.isfile(dirtrge + "\\TZInfo.dat"):
-        os.remove(dirtrge + "\\TZInfo.dat")
-    if os.path.isfile(dirtrge + "\\MFTDump.csv"):
-        os.remove(dirtrge + "\\MFTDump.csv")
-    if os.path.isfile(dirtrge + "\\MFTDelt.csv"):
-        os.remove(dirtrge + "\\MFTDelt.csv")
-    if os.path.isfile(dirtrge + "\\MFTActv.csv"):
-        os.remove(dirtrge + "\\MFTActv.csv")
-    if os.path.isfile(dirtrge + "\\MFTIOCs.csv"):
-         os.remove(dirtrge + "\\MFTIOCs.csv")
-    if os.path.isfile(dirtrge + "\\MFTDump.log"):
-        os.remove(dirtrge + "\\MFTDump.log")
-    if os.path.isfile(dirtrge + "\\RDPGood.csv"):
-        os.remove(dirtrge + "\\RDPGood.csv")
-    if os.path.isfile(dirtrge + "\\SecEvt4625.csv"):
-        os.remove(dirtrge + "\\SecEvt4625.csv")
-    if os.path.isfile(dirtrge + "\\WinPrefetchView.csv"):
-        os.remove(dirtrge + "\\WinPrefetchView.csv")
-    if os.path.isfile(dirtrge + "\\AmCache.dat"):
-        os.remove(dirtrge + "\\AmCache.dat")
-    if os.path.isfile(dirtrge + "\\SysEvt7045.csv"):
-        os.remove(dirtrge + "\\SysEvt7045.csv")
-    if os.path.isfile(dirtrge + "\\SecEvt4698.csv"):
-        os.remove(dirtrge + "\\SecEvt4698.csv")
-    if os.path.isfile(dirtrge + "\\SecEvt4648.csv"):
-        os.remove(dirtrge + "\\SecEvt4648.csv")
-    if os.path.isfile(dirtrge + "\\RBin.dat"):
-        os.remove(dirtrge + "\\RBin.dat")
-    if os.path.isfile(dirtrge + "\\LNKFiles.csv"):
-        os.remove(dirtrge + "\\LNKFiles.csv")
+    if os.path.isfile(os.path.join(dirtrge, "Security.evtx")):
+        os.remove(os.path.join(dirtrge, "Security.evtx"))
+    if os.path.isfile(os.path.join(dirtrge, "Security1.evtx")):
+        os.remove(os.path.join(dirtrge, "Security1.evtx"))
+    if os.path.isfile(os.path.join(dirtrge, "System.evtx")):
+        os.remove(os.path.join(dirtrge, "System.evtx"))
+    if os.path.isfile(os.path.join(dirtrge, "System1.evtx")):
+        os.remove(os.path.join(dirtrge, "System1.evtx"))
+    if os.path.isfile(os.path.join(dirtrge, "SysInfo.dat")):
+        os.remove(os.path.join(dirtrge, "SysInfo.dat"))
+    if os.path.isfile(os.path.join(dirtrge, "TZInfo.dat")):
+        os.remove(os.path.join(dirtrge, "TZInfo.dat"))
+    if os.path.isfile(os.path.join(dirtrge, "MFTDump.csv")):
+        os.remove(os.path.join(dirtrge, "MFTDump.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "MFTDelt.csv")):
+        os.remove(os.path.join(dirtrge, "MFTDelt.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "MFTActv.csv")):
+        os.remove(os.path.join(dirtrge, "MFTActv.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "MFTIOCs.csv")):
+         os.remove(os.path.join(dirtrge, "MFTIOCs.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "MFTDump.log")):
+        os.remove(os.path.join(dirtrge, "MFTDump.log"))
+    if os.path.isfile(os.path.join(dirtrge, "RDPGood.csv")):
+        os.remove(os.path.join(dirtrge, "RDPGood.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "SecEvt4625.csv")):
+        os.remove(os.path.join(dirtrge, "SecEvt4625.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "WinPrefetchView.csv")):
+        os.remove(os.path.join(dirtrge, "WinPrefetchView.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "AmCache.dat")):
+        os.remove(os.path.join(dirtrge, "AmCache.dat"))
+    if os.path.isfile(os.path.join(dirtrge, "SysEvt7045.csv")):
+        os.remove(os.path.join(dirtrge, "SysEvt7045.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "SecEvt4698.csv")):
+        os.remove(os.path.join(dirtrge, "SecEvt4698.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "SecEvt4648.csv")):
+        os.remove(os.path.join(dirtrge, "SecEvt4648.csv"))
+    if os.path.isfile(os.path.join(dirtrge, "RBin.dat")):
+        os.remove(os.path.join(dirtrge, "RBin.dat"))
+    if os.path.isfile(os.path.join(dirtrge, "LNKFiles.csv")):
+        os.remove(os.path.join(dirtrge, "LNKFiles.csv"))
 
     for curfile in os.listdir(dirtrge):
         if curfile.startswith("shlasst."):
-            os.remove(dirtrge + "\\" + curfile)
+            os.remove(os.path.join(dirtrge, curfile))
 
-    if os.path.isdir(dirtrge + "\\ShellBags"):
-        for curfile in os.listdir(dirtrge + "\\ShellBags"):
-            os.remove(dirtrge + "\\ShellBags\\" + curfile)
+    if os.path.isdir(os.path.join(dirtrge, "ShellBags")):
+        for curfile in os.listdir(os.path.join(dirtrge, "ShellBags")):
+            os.remove(os.path.join(dirtrge, "ShellBags", curfile))
 
     ChSwSubDir = ""
-    for ChName in glob.glob(dirtrge + '\\**\\account_tampering.csv', recursive=True):
-        os.remove(dirtrge + "\\" + ChName)
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "account_tampering.csv"), recursive=True):
+        os.remove(os.path.join(dirtrge, ChName))
         if ChSwSubDir == "":
-            Path_File = os.path.split(dirtrge + "\\" + ChName)
+            Path_File = os.path.split(os.path.join(dirtrge, ChName))
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\antivirus.csv', recursive=True):
-        os.remove(dirtrge + "\\" + ChName)
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "antivirus.csv"), recursive=True):
+        os.remove(os.path.join(dirtrge, ChName))
         if ChSwSubDir == "":
-            Path_File = os.path.split(dirtrge + "\\" + ChName)
+            Path_File = os.path.split(os.path.join(dirtrge, ChName))
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\lateral_movement.csv', recursive=True):
-        os.remove(dirtrge + "\\" + ChName)
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "lateral_movement.csv"), recursive=True):
+        os.remove(os.path.join(dirtrge, ChName))
         if ChSwSubDir == "":
-            Path_File = os.path.split(dirtrge + "\\" + ChName)
+            Path_File = os.path.split(os.path.join(dirtrge, ChName))
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\log_tampering.csv', recursive=True):
-        os.remove(dirtrge + "\\" + ChName)
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "log_tampering.csv"), recursive=True):
+        os.remove(os.path.join(dirtrge, ChName))
         if ChSwSubDir == "":
-            Path_File = os.path.split(dirtrge + "\\" + ChName)
+            Path_File = os.path.split(os.path.join(dirtrge, ChName))
             ChSwSubDir = Path_File[0]
 
-    for ChName in glob.glob(dirtrge + '\\**\\sigma.csv', recursive=True):
-        os.remove(dirtrge + "\\" + ChName)
+    for ChName in glob.glob(os.path.join(dirtrge, "**", "sigma.csv"), recursive=True):
+        os.remove(os.path.join(dirtrge, ChName))
         if ChSwSubDir == "":
-            Path_File = os.path.split(dirtrge + "\\" + ChName)
+            Path_File = os.path.split(os.path.join(dirtrge, ChName))
             ChSwSubDir = Path_File[0]
 
     if ChSwSubDir != "":
-        ChSwLeftOvers = ChSwSubDir + "\\**\\*.csv"
+        ChSwLeftOvers = os.path.join(ChSwSubDir, "**", "*.csv")
         for ChName in glob.glob(ChSwLeftOvers, recursive=True):
             os.remove(ChName)
         shutil.rmtree(ChSwSubDir)
@@ -599,16 +599,20 @@ def main():
     print("[+] Now Building Additional Data from Sources...")
     print("[+] Generating System Information from Registry...")
     
-    regName = dirname + RegSoft
+    ###########################################################################
+    # os.path.join will not work if RegSoft starts with a path separator      #
+    # - use [1:] to ignore path separator                                     #
+    ###########################################################################
+    regName = os.path.join(dirname, RegSoft[1:])
     if os.path.isfile(regName):
         SrcSysReg = 1
 
-        exeName = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe"
+        exeName = os.path.join(dirleft, "RRV", "RegRipper3.0-master", "rip.exe")
         if os.path.isfile(exeName):
-            cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p source_os -r " + dirname + RegSoft + " > " + dirtrge + "\\SysInfo.dat"
+            cmdexec = exeName + " -p source_os -r " + os.path.join(dirname, RegSoft[1:]) + " > " + os.path.join(dirtrge, "SysInfo.dat")
             returned_value = os.system(cmdexec)
 
-            cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p winver -r " + dirname + RegSoft + " >> " + dirtrge + "\\SysInfo.dat"
+            cmdexec = exeName + " -p winver -r " + os.path.join(dirname, RegSoft[1:]) + " >> " + os.path.join(dirtrge, "SysInfo.dat")
             returned_value = os.system(cmdexec)
 
             SrcSysTxt = 1
@@ -621,16 +625,20 @@ def main():
         SrcSysReg = 0
 
 
-    regName = dirname + RegSyst
+    ###########################################################################
+    # os.path.join will not work if RegSyst starts with a path separator      #
+    # - use [1:] to ignore path separator                                     #
+    ###########################################################################
+    regName = os.path.join(dirname, RegSyst[1:])
     if os.path.isfile(regName):
         SrcSysReg = 1
 
-        exeName = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe"
+        exeName = os.path.join(dirleft, "RRV", "RegRipper3.0-master", "rip.exe")
         if os.path.isfile(exeName):
-            cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p compname -r " + dirname + RegSyst + " >> "  + dirtrge + "\\SysInfo.dat"
+            cmdexec = exeName + " -p compname -r " + os.path.join(dirname, RegSyst[1:]) + " >> "  + os.path.join(dirtrge, "SysInfo.dat")
             returned_value = os.system(cmdexec)
 
-            cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p timezone -r " + dirname + RegSyst + "  >  " + dirtrge + "\\TZInfo.dat"
+            cmdexec = exeName + " -p timezone -r " + os.path.join(dirname, RegSyst[1:]) + "  >  " + os.path.join(dirtrge, "TZInfo.dat")
             returned_value = os.system(cmdexec)
 
             SrcSysTxt = 1
@@ -643,13 +651,17 @@ def main():
 
 
     print("[+] Generating AmCache Information from Registry...")
-    regName = dirname + AmCache
+    ###########################################################################
+    # os.path.join will not work if AmCache starts with a path separator      #
+    # - use [1:] to ignore path separator                                     #
+    ###########################################################################
+    regName = os.path.join(dirname, AmCache[1:])
     if os.path.isfile(regName):
         SrcAmCach = 1
 
-        exeName = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe"
+        exeName = os.path.join(dirleft, "RRV", "RegRipper3.0-master", "rip.exe")
         if os.path.isfile(exeName):
-            cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p amcache -r " + dirname + AmCache + " >  " + dirtrge + "\\AmCache.dat"
+            cmdexec = exeName + " -p amcache -r " + os.path.join(dirname, AmCache[1:]) + " >  " + os.path.join(dirtrge, "AmCache.dat")
             returned_value = os.system(cmdexec)
 
             SrcAmCTxt = 1
@@ -663,11 +675,16 @@ def main():
 
     if RunAllAll == 1 or SrcPrf == 1:
         print("[+] Generating Prefetch Data...")
-        exeName = dirleft + "\\SYS\\WinPrefetchView.exe"
+
+        ###########################################################################
+        # os.path.join will not work if Prefetc starts with a path separator      #
+        # - use [1:] to ignore path separator                                     #
+        ###########################################################################
+        exeName = os.path.join(dirleft, "SYS", "WinPrefetchView.exe")
 
         if os.path.isfile(exeName):
             if os.path.isdir(dirname + Prefetc):
-                cmdexec = dirleft + "\\SYS\\WinPrefetchView.exe /folder " + dirname + Prefetc + " /scomma  " + dirtrge + "\\WinPrefetchview.csv"
+                cmdexec = exeName + " /folder " + os.path.join(dirname, Prefetc[1:]) + " /scomma  " + os.path.join(dirtrge, "WinPrefetchview.csv")
                 returned_value = os.system(cmdexec)
             else:
                 print("[!] Prefetch Data Not Found in the Collection: " + dirname + Prefetc)
@@ -978,7 +995,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.48)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.51)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -4761,7 +4778,7 @@ def main():
                     shutil.rmtree(ChSwSubDir)
             else:
                 print("[+] There are Unprocessed Chainsaw Files. So I WILL NOT Delete the ChainSaw Directory")
-                print("[!] WARNING: Next Time AChReport Runs, IT WILL DELETE THESE FILES!")
+                print("[!] WARNING: Next Time TriageReport Runs, IT WILL DELETE THESE FILES!")
 
         else:
             print("[!] Chainsaw Executable not found!  Bypassing Chainsaw Processing...")
