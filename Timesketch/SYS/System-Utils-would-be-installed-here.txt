@@ -4,3 +4,4 @@ LECmd
 SrumECmd
 Logparser
 SBECmd
+RBCMD

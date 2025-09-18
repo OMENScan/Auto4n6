@@ -67,7 +67,7 @@
 #   v1.51 -  Convert Path Separators to os.path.join                  #
 #         -  Replace OS Copy with shutil copy                         #
 ####################################################################### 
-import os
+import os, stat
 import sys
 import csv
 import time 
@@ -502,12 +502,16 @@ def main():
     os.makedirs(dirtrge, exist_ok=True)
 
     if os.path.isfile(os.path.join(dirtrge, "Security.evtx")):
+        os.chmod(os.path.join(dirtrge, "Security.evtx"), stat.S_IWRITE)
         os.remove(os.path.join(dirtrge, "Security.evtx"))
     if os.path.isfile(os.path.join(dirtrge, "Security1.evtx")):
+        os.chmod(os.path.join(dirtrge, "Security1.evtx"), stat.S_IWRITE)
         os.remove(os.path.join(dirtrge, "Security1.evtx"))
     if os.path.isfile(os.path.join(dirtrge, "System.evtx")):
+        os.chmod(os.path.join(dirtrge, "System.evtx"), stat.S_IWRITE)
         os.remove(os.path.join(dirtrge, "System.evtx"))
     if os.path.isfile(os.path.join(dirtrge, "System1.evtx")):
+        os.chmod(os.path.join(dirtrge, "System1.evtx"), stat.S_IWRITE)
         os.remove(os.path.join(dirtrge, "System1.evtx"))
     if os.path.isfile(os.path.join(dirtrge, "SysInfo.dat")):
         os.remove(os.path.join(dirtrge, "SysInfo.dat"))
@@ -698,24 +702,31 @@ def main():
 
     if RunAllAll == 1 or SrcNTUsr == 1:
         print("[+] Generating User Assist for Multiple User Profiles...")
+
+        ###########################################################################
+        # os.path.join will not work if RegUser starts with a path separator      #
+        # - use [1:] to ignore path separator                                     #
+        ###########################################################################
         reccount = 0
-        curdir = dirname + RegUser
+        curdir = os.path.join(dirname, RegUser[1:])
+        exeName = os.path.join(dirleft, "RRV", "RegRipper3.0-master", "rip.exe")
+
         for root, dirs, files in os.walk(curdir):
             for fname in files:
                 fnameUpper = fname.upper()
                 curfile = os.path.join(root, fname)
 
                 if fnameUpper.startswith("NTUSER.") and fnameUpper.endswith(".DAT"):
-                    curouput = dirtrge + "\\shlasst." + str(reccount)
+                    curouput = os.path.join(dirtrge, "shlasst." + str(reccount))
 
                     astfile = open(curouput, "w", encoding='utf8', errors="replace")
                     astfile.write("<h2>User Registry: " + curfile + "</h2>\n")
                     astfile.close()
 
-                    cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p shellfolders -r " + curfile + " >> " + curouput
+                    cmdexec = exeName + " -p shellfolders -r " + curfile + " >> " + curouput
                     returned_value = os.system(cmdexec)
 
-                    cmdexec = dirleft + "\\RRV\\RegRipper3.0-master\\rip.exe -p userassist -r " + curfile + " >> " + curouput
+                    cmdexec = exeName + " -p userassist -r " + curfile + " >> " + curouput
                     returned_value = os.system(cmdexec)
 
                     reccount = reccount + 1
@@ -727,15 +738,17 @@ def main():
         print("[+] Generating Event Log Entries...")
         print("[+] Generating RDP Success and Failure...")
 
-        EvtName = dirname + EvtDir1 + "\\Security.evtx"
+        ###########################################################################
+        # os.path.join will not work if EVTDir(x) starts with a path separator    #
+        # - use [1:] to ignore path separator                                     #
+        ###########################################################################
+        EvtName = os.path.join(dirname, EvtDir1[1:], "Security.evtx")
         if os.path.isfile(EvtName):
-            cmdexec = "copy " + EvtName + " " + dirtrge + "\\"
-            returned_value = os.system(cmdexec)
+            shutil.copy(EvtName, dirtrge)
         else:
-            EvtName = dirname + EvtDir2 + "\\Security.evtx"
+            EvtName = os.path.join(dirname, EvtDir2[1:], "Security.evtx")
             if os.path.isfile(EvtName):
-                cmdexec = "copy " + EvtName + " " + dirtrge + "\\"
-                returned_value = os.system(cmdexec)
+                shutil.copy(EvtName, dirtrge)
             else:
                 SrcEvtx = 0
                 print("[!] Security Event Log Not Found...")
@@ -743,15 +756,13 @@ def main():
 
         print("[+] Generating Service Installed (7045) Messages...")
 
-        EvtName = dirname + EvtDir1 + "\\System.evtx"
+        EvtName = os.path.join(dirname, EvtDir1[1:], "System.evtx")
         if os.path.isfile(EvtName):
-            cmdexec = "copy " + EvtName + " " + dirtrge + "\\"
-            returned_value = os.system(cmdexec)
+            shutil.copy(EvtName, dirtrge)
         else:
-            EvtName = dirname + EvtDir2 + "\\System.evtx"
+            EvtName = os.path.join(dirname, EvtDir2[1:], "System.evtx")
             if os.path.isfile(EvtName):
-                cmdexec = "copy " + EvtName + " " + dirtrge + "\\"
-                returned_value = os.system(cmdexec)
+                shutil.copy(EvtName, dirtrge)
             else:
                 SrcEvtx = 0
                 print("[!] System Event Log Not Found...")
@@ -763,11 +774,11 @@ def main():
         ###########################################################################
         if SrcEvtx == 1:
             print("[+] Stabilizing Security Event Logs...")
-            cmdexec = "Wevtutil.exe epl " + dirtrge + "\\Security.evtx " + dirtrge + "\\Security1.evtx /lf:True"
+            cmdexec = "Wevtutil.exe epl " + os.path.join(dirtrge, "Security.evtx") + " " + os.path.join(dirtrge, "Security1.evtx") + " /lf:True"
             returned_value = os.system(cmdexec)
 
             print("[+] Stabilizing System Event Logs...")
-            cmdexec = "Wevtutil.exe epl " + dirtrge + "\\System.evtx " + dirtrge + "\\System1.evtx /lf:True"
+            cmdexec = "Wevtutil.exe epl " + os.path.join(dirtrge, "System.evtx") + " " + os.path.join(dirtrge, "System1.evtx") + " /lf:True"
             returned_value = os.system(cmdexec)
 
 
@@ -775,19 +786,19 @@ def main():
             # Parse the Events                                                        #
             ###########################################################################
             print("[+] Parsing Security Event Logs...")
-            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 1, '|') as Machine, EXTRACT_TOKEN(Strings, 5, '|') as LoginID, EXTRACT_TOKEN(Strings, 6, '|') as LoginMachine, EXTRACT_TOKEN(Strings, 8, '|') as LogonType, EXTRACT_TOKEN(Strings, 18, '|') as RemoteIP from " + dirtrge + "\\Security1.evtx where eventid=4624 AND LogonType='10'\" -i:evt -o:csv -q > " + dirtrge + "\\RDPGood.csv"
+            cmdexec = os.path.join(dirleft, "SYS", "LogParser.exe") + " \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 1, '|') as Machine, EXTRACT_TOKEN(Strings, 5, '|') as LoginID, EXTRACT_TOKEN(Strings, 6, '|') as LoginMachine, EXTRACT_TOKEN(Strings, 8, '|') as LogonType, EXTRACT_TOKEN(Strings, 18, '|') as RemoteIP from " + os.path.join(dirtrge, "Security1.evtx") + " where eventid=4624 AND LogonType='10'\" -i:evt -o:csv -q > " + os.path.join(dirtrge, "RDPGood.csv")
             returned_value = os.system(cmdexec)
 
-            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 5, '|') as LoginID from " + dirtrge + "\\Security1.evtx where eventid=4625\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4625.csv"
+            cmdexec = os.path.join(dirleft, "SYS", "LogParser.exe") + " \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(Strings, 5, '|') as LoginID from " + os.path.join(dirtrge, "Security1.evtx") + " where eventid=4625\" -i:evt -o:csv -q > " + os.path.join(dirtrge, "SecEvt4625.csv")
             returned_value = os.system(cmdexec)
 
-            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 0, '|') AS ServiceName, EXTRACT_TOKEN(strings, 1, '|') AS ServicePath, EXTRACT_TOKEN(strings, 4, '|') AS ServiceUser FROM " + dirtrge + "\\System1.evtx WHERE EventID = 7045\" -i:evt -o:csv -q > " + dirtrge + "\\SysEvt7045.csv"
+            cmdexec = os.path.join(dirleft, "SYS", "LogParser.exe") + " \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 0, '|') AS ServiceName, EXTRACT_TOKEN(strings, 1, '|') AS ServicePath, EXTRACT_TOKEN(strings, 4, '|') AS ServiceUser FROM " + os.path.join(dirtrge, "System1.evtx") + " WHERE EventID = 7045\" -i:evt -o:csv -q > " + os.path.join(dirtrge, "SysEvt7045.csv")
             returned_value = os.system(cmdexec)
 
-            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, SourceName, EventCategoryName, Message FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4698\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4698.csv"
+            cmdexec = os.path.join(dirleft, "SYS", "LogParser.exe") + " \"Select to_utctime(Timegenerated) AS Date, SourceName, EventCategoryName, Message FROM " + os.path.join(dirtrge, "Security1.evtx") + " WHERE EventID = 4698\" -i:evt -o:csv -q > " + os.path.join(dirtrge, "SecEvt4698.csv")
             returned_value = os.system(cmdexec)
 
-            cmdexec = ".\\SYS\\LogParser.exe \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 1, '|') as accountname, EXTRACT_TOKEN(strings, 2, '|') as domain, EXTRACT_TOKEN(strings, 5, '|') as usedaccount, EXTRACT_TOKEN(strings, 6, '|') as useddomain, EXTRACT_TOKEN(strings, 8, '|') as targetserver, EXTRACT_TOKEN(strings, 9, '|') as extradata, EXTRACT_TOKEN(strings, 11, '|') as procname, EXTRACT_TOKEN(strings, 12, '|') as sourceip FROM " + dirtrge + "\\Security1.evtx WHERE EventID = 4648\" -i:evt -o:csv -q > " + dirtrge + "\\SecEvt4648.csv"
+            cmdexec = os.path.join(dirleft, "SYS", "LogParser.exe") + " \"Select to_utctime(Timegenerated) AS Date, EXTRACT_TOKEN(strings, 1, '|') as accountname, EXTRACT_TOKEN(strings, 2, '|') as domain, EXTRACT_TOKEN(strings, 5, '|') as usedaccount, EXTRACT_TOKEN(strings, 6, '|') as useddomain, EXTRACT_TOKEN(strings, 8, '|') as targetserver, EXTRACT_TOKEN(strings, 9, '|') as extradata, EXTRACT_TOKEN(strings, 11, '|') as procname, EXTRACT_TOKEN(strings, 12, '|') as sourceip FROM " + os.path.join(dirtrge, "Security1.evtx") + " WHERE EventID = 4648\" -i:evt -o:csv -q > " + os.path.join(dirtrge, "SecEvt4648.csv")
             returned_value = os.system(cmdexec)
 
         else:
@@ -936,10 +947,15 @@ def main():
     # Clean Up.                                                               #
     ###########################################################################
     if RunAllAll == 1 or SrcEvtx == 1:
-        os.remove(dirtrge + "\\Security.evtx")
-        os.remove(dirtrge + "\\Security1.evtx")
-        os.remove(dirtrge + "\\System.evtx")
-        os.remove(dirtrge + "\\System1.evtx")
+        os.chmod(os.path.join(dirtrge, "Security.evtx"), stat.S_IWRITE)
+        os.chmod(os.path.join(dirtrge, "Security1.evtx"), stat.S_IWRITE)
+        os.chmod(os.path.join(dirtrge, "System.evtx"), stat.S_IWRITE)
+        os.chmod(os.path.join(dirtrge, "System1.evtx"), stat.S_IWRITE)
+
+        os.remove(os.path.join(dirtrge, "Security.evtx"))
+        os.remove(os.path.join(dirtrge, "Security1.evtx"))
+        os.remove(os.path.join(dirtrge, "System.evtx"))
+        os.remove(os.path.join(dirtrge, "System1.evtx"))
 
 
 
@@ -1220,7 +1236,7 @@ def main():
     outfile.write("SysInternals PSLoggedon.exe utility.  This information will help you \n")
     outfile.write("determine who may be actively accessing this endpoint.</font></i></p>\n")
 
-    filname = dirname + "\\sys\\Logon.dat"
+    filname = os.path.join(dirname, "Triage", "Sys", "Logon.dat")
 
     if os.path.isfile(filname):
         innfile = open(filname, encoding='utf8', errors="replace")
