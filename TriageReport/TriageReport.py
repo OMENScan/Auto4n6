@@ -814,9 +814,9 @@ def main():
     if RunAllAll == 1 or SrcRBin == 1:
         print("[+] Parsing Recycle Bin...")
 
-        exeName = dirleft + "\\SYS\\RBCmd.exe"
+        exeName = os.path.join(dirleft, "SYS", "RBCmd.exe")
         if os.path.isfile(exeName):
-            cmdexec = dirleft + "\\SYS\\RBCmd.exe --dt \"yyyy-MM-dd HH:mm:ss K\" -d " + dirname + Recycle + " >> " + dirtrge + "\\RBin.dat" 
+            cmdexec = exeName + " --dt \"yyyy-MM-dd HH:mm:ss K\" -d " + os.path.join(dirname, Recycle[1:]) + " >> " + os.path.join(dirtrge, "RBin.dat")
             returned_value = os.system(cmdexec)
         else:
             print("[!] RBCmd Recycle Bin Parser Not Found...")
@@ -832,8 +832,8 @@ def main():
         print("[+] Parsing $MFT...")
         MFTFound = 0
 
-        exeName = dirleft + "\\DSK\\MFTDump.exe"
-        exeNam1 = dirleft + "\\DSK\\MFTECmd.exe"
+        exeName = os.path.join(dirleft, "DSK", "MFTDump.exe")
+        exeNam1 = os.path.join(dirleft, "DSK", "MFTECmd.exe")
         if os.path.isfile(exeName):
             ###########################################################################
             # Use Malware Hunters MFT Parser (1) - Setup Columns                      #
@@ -850,15 +850,9 @@ def main():
             MFTDelFlag = "1"
             MFTDelim = '\t'
 
-            MFTName = dirname + "\\RawData\\$MFT"
+            MFTName = os.path.join(dirname, MFTFile[1:])
             if os.path.isfile(MFTName):
-                cmdexec = dirleft + "\\DSK\\MFTDump.exe /l /d /v --output=" + dirtrge + "\\MFTDump.csv " + MFTName 
-                returned_value = os.system(cmdexec)
-                MFTFound = 1
-
-            MFTName = dirname + MFTFile
-            if os.path.isfile(MFTName):
-                cmdexec = dirleft + "\\DSK\\MFTDump.exe /l /d /v --output=" + dirtrge + "\\MFTDump.csv " + MFTName
+                cmdexec = exeName + " /l /d /v --output=" + os.path.join(dirtrge, "MFTDump.csv") + " " + MFTName
                 returned_value = os.system(cmdexec)
                 MFTFound = 1
 
@@ -878,15 +872,9 @@ def main():
             MFTDelFlag = "False"
             MFTDelim = ','
 
-            MFTName = dirname + "\\RawData\\$MFT"
+            MFTName = os.path.join(dirname, MFTFile[1:])
             if os.path.isfile(MFTName):
-                cmdexec = dirleft + "\\DSK\\MFTECmd.exe -f " + MFTName + " --csv " + dirtrge + " --csvf MFTDump.csv"
-                returned_value = os.system(cmdexec)
-                MFTFound = 1
-
-            MFTName = dirname + MFTFile
-            if os.path.isfile(MFTName):
-                cmdexec = dirleft + "\\DSK\\MFTECmd.exe -f " + MFTName + " --csv " + dirtrge + " --csvf MFTDump.csv"
+                cmdexec = exeNam1 + " -f " + MFTName + " --csv " + dirtrge + " --csvf MFTDump.csv"
                 returned_value = os.system(cmdexec)
                 MFTFound = 1
 
@@ -902,17 +890,17 @@ def main():
             ###########################################################################
             # Normalize the MFTDump.csv into MFTDelt.csv and MFTActv.csv              #
             ###########################################################################
-            MFTDelfile = open(dirtrge + "\\MFTDelt.csv", "w", encoding='utf8', errors="replace")
-            MFTActfile = open(dirtrge + "\\MFTActv.csv", "w", encoding='utf8', errors="replace")
-            MFTIOCfile = open(dirtrge + "\\MFTIOCs.csv", "w", encoding='utf8', errors="replace")
+            MFTDelfile = open(os.path.join(dirtrge, "MFTDelt.csv"), "w", encoding='utf8', errors="replace")
+            MFTActfile = open(os.path.join(dirtrge, "MFTActv.csv"), "w", encoding='utf8', errors="replace")
+            MFTIOCfile = open(os.path.join(dirtrge, "MFTIOCs.csv"), "w", encoding='utf8', errors="replace")
 
-            with open(dirtrge + "\\MFTDump.csv", 'r', encoding='utf8', errors="replace") as csvfile:
+            with open(os.path.join(dirtrge, "MFTDump.csv"), 'r', encoding='utf8', errors="replace") as csvfile:
                 csvread = csv.reader((line.replace('\0','') for line in csvfile), delimiter=MFTDelim)
                 for csvrow in csvread:
                     if len(csvrow) > 13:
                         # Normalized Full Path
                         if iMFTParsr == 2:
-                            MFTDisplayPath = csvrow[iMFTPath] + "\\" + csvrow[iMFTFile]
+                            MFTDisplayPath = os.path.join(csvrow[iMFTPath], csvrow[iMFTFile])
                         else:
                             MFTDisplayPath = csvrow[iMFTPath]
 
@@ -1095,9 +1083,9 @@ def main():
         outfile.write("<H2>Basic Endpoint Information</H2>\n")
         outfile.write("</label><div><hr>\n")
 
-        filname = dirname + "\\info.dat"
-        dedname = dirtrge + "\\SysInfo.dat"
-        TZname = dirtrge + "\\TZInfo.dat"
+        filname = os.path.join(dirname, "info.dat")
+        dedname = os.path.join(dirtrge, "SysInfo.dat")
+        TZname = os.path.join(dirtrge, "TZInfo.dat")
 
         if os.path.isfile(filname):
             outfile.write("<p><i><font color=firebrick>In this section, AChoir has parsed standard information about\n")
@@ -1256,7 +1244,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunSmlDel == 1) and SrcMFT == 1:
         print("[+] Generating Small Deleted Files $MFT Information...")
-        filname = dirtrge + "\\MFTDelt.csv"
+        filname = os.path.join(dirtrge, "MFTDelt.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1332,7 +1320,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunMedDel == 1) and SrcMFT == 1:
         print("[+] Generating Medium Deleted Files $MFT Information...")
-        filname = dirtrge + "\\MFTDelt.csv"
+        filname = os.path.join(dirtrge, "MFTDelt.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1407,7 +1395,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunLrgDel == 1) and SrcMFT == 1:
         print("[+] Generating Large Deleted Files $MFT Information...")
-        filname = dirtrge + "\\MFTDelt.csv"
+        filname = os.path.join(dirtrge, "MFTDelt.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1483,7 +1471,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunLrgAct == 1) and SrcMFT == 1:
         print("[+] Generating Large Active Files $MFT Information...")
-        filname = dirtrge + "\\MFTActv.csv"
+        filname = os.path.join(dirtrge, "MFTActv.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1560,7 +1548,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunTmpAct == 1) and SrcMFT == 1:
         print("[+] Generating Active Files in Temp Directories...")
-        filname = dirtrge + "\\MFTActv.csv"
+        filname = os.path.join(dirtrge, "MFTActv.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1640,7 +1628,7 @@ def main():
     ###########################################################################
     if (RunAllAll == 1 or RunTmpDel == 1) and SrcMFT == 1:
         print("[+] Generating Deleted Files in Temp Directories...")
-        filname = dirtrge + "\\MFTDelt.csv"
+        filname = os.path.join(dirtrge, "MFTDelt.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1720,7 +1708,7 @@ def main():
     ###########################################################################
     if MFTFound == 1 and SrcMFT == 1:
         print("[+] Generating IOC Matches in the Master File Table ($MFT)...")
-        filname = dirtrge + "\\MFTIOCs.csv"
+        filname = os.path.join(dirtrge, "MFTIOCs.csv")
 
         if os.path.isfile(filname):
             reccount = 0
@@ -1783,16 +1771,16 @@ def main():
     # Clean Up.                                                               #
     ###########################################################################
     if RunAllAll == 1 or SrcMFT == 1:
-        if os.path.isfile(dirtrge + "\\MFTDump.csv"):
-            os.remove(dirtrge + "\\MFTDump.csv")
-        if os.path.isfile(dirtrge + "\\MFTDelt.csv"):
-            os.remove(dirtrge + "\\MFTDelt.csv")
-        if os.path.isfile(dirtrge + "\\MFTActv.csv"):
-            os.remove(dirtrge + "\\MFTActv.csv")
-        if os.path.isfile(dirtrge + "\\MFTIOCs.csv"):
-            os.remove(dirtrge + "\\MFTIOCs.csv")
-        if os.path.isfile(dirtrge + "\\MFTDump.log"):
-            os.remove(dirtrge + "\\MFTDump.log")
+        if os.path.isfile(os.path.join(dirtrge, "MFTDump.csv")):
+            os.remove(os.path.join(dirtrge, "MFTDump.csv"))
+        if os.path.isfile(os.path.join(dirtrge, "MFTDelt.csv")):
+            os.remove(os.path.join(dirtrge, "MFTDelt.csv"))
+        if os.path.isfile(os.path.join(dirtrge, "MFTActv.csv")):
+            os.remove(os.path.join(dirtrge, "MFTActv.csv"))
+        if os.path.isfile(os.path.join(dirtrge, "MFTIOCs.csv")):
+            os.remove(os.path.join(dirtrge, "MFTIOCs.csv"))
+        if os.path.isfile(os.path.join(dirtrge, "MFTDump.log")):
+            os.remove(os.path.join(dirtrge, "MFTDump.log"))
 
 
     ###########################################################################
@@ -1814,7 +1802,7 @@ def main():
         outfile.write("to determine if they look suspicious.<font color=gray size=-1><br><br>Source: Parsed Security Event Log, TZ is UTC</font></font></i></p>\n")
 
         reccount = 0
-        filname = dirtrge + "\\RDPGood.csv"
+        filname = os.path.join(dirtrge, "RDPGood.csv")
 
         if os.path.isfile(filname):
             outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
@@ -1902,7 +1890,7 @@ def main():
         outfile.write(" look suspicious.<font color=gray size=-1><br><br>Source: Parsed Security Event Log, TZ is UTC</font></font></i></p>\n")
 
         reccount = 0
-        filname = dirtrge + "\\SecEvt4625.csv"
+        filname = os.path.join(dirtrge, "SecEvt4625.csv")
 
         dedupCol = []
         dedupCnt = []
@@ -1986,7 +1974,7 @@ def main():
         outfile.write("<font color=gray size=-1><br><br>Source: Parsed Security Event Log, TZ is UTC</font></font></i></p>\n")
 
         reccount = 0
-        filname = dirtrge + "\\SecEvt4648.csv"
+        filname = os.path.join(dirtrge, "SecEvt4648.csv")
 
         if os.path.isfile(filname):
             outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
@@ -2437,7 +2425,7 @@ def main():
         outfile.write("<font color=gray size=-1><br><br>Source: Collected Prefetch files, TZ is UTC.</font></font></i></p>\n")
 
         reccount = 0
-        filname = dirtrge + "\\WinPrefetchView.csv"
+        filname = os.path.join(dirtrge, "WinPrefetchView.csv")
 
         if os.path.isfile(filname):
             outfile.write("<table class=\"sortable\" border=1 cellpadding=5 width=100%>\n")
@@ -2512,7 +2500,7 @@ def main():
         outfile.write("Will be present.</font></i></p>\n")
 
         reccount = 0
-        filname = dirname + PCAsist + "\\PcaAppLaunchDic.txt"
+        filname = os.path.join(dirname, PCAsist[1:], "PcaAppLaunchDic.txt")
 
 
         if os.path.isfile(filname):
@@ -2762,7 +2750,7 @@ def main():
         outfile.write("ordinary, or appears to be malicious.<font color=gray size=-1><br><br>Source: AmCache Registry Hive, Dates ending with a Z denote UTC Time Zone</font></font></i></p>\n")
 
         reccount = 0
-        filname = dirtrge + "\\AmCache.dat"
+        filname = os.path.join(dirtrge, "AmCache.dat")
         AmCName = " "
         AmCLast = " "
 
