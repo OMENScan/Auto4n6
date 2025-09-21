@@ -66,6 +66,7 @@
 #            (SBECmd, LECmd, Logparser)                               #
 #   v1.51 -  Convert Path Separators to os.path.join                  #
 #         -  Replace OS Copy with shutil copy                         #
+#   v1.52 -  Cleanup Leftover Directories                             #
 ####################################################################### 
 import os, stat
 import sys
@@ -999,7 +1000,7 @@ def main():
 
     outfile.write("<body>\n")
     outfile.write("<p><Center>\n")
-    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.51)</H1>\n")
+    outfile.write("<a name=Top></a>\n<H1>Triage Collection Endpoint Report (v1.52)</H1>\n")
 
     if len(Brander) > 1:
         outfile.write(Brander + "\n")
@@ -3990,6 +3991,8 @@ def main():
                         else:
                             outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
 
+                shutil.rmtree(os.path.join(dirtrge, "Shellbags"), ignore_errors=False, onerror=None)
+
             else:
                 print("[!] No Shell Bags Parsed!  Bypassing Shell Bags Processing...")
 
@@ -4766,6 +4769,14 @@ def main():
 
 
             ###########################################################################
+            # Chainsaw: Just Delete These                                              #
+            ###########################################################################
+            for ChName in glob.glob(os.path.join(dirtrge, "**", "microsoft_rds_events_-_user_profile_disk.csv"), recursive=True):
+                os.remove(ChName)
+
+
+
+            ###########################################################################
             # Chainsaw: See if we have any Unprocessed Files                          #
             ###########################################################################
             reccount = 0
@@ -4913,6 +4924,7 @@ def main():
                     outfile.write("<p>Records Found: " + str(reccount) + "</p><hr>\n")
 
             outfile.write("</div>\n")
+            shutil.rmtree(os.path.join(dirtrge, "Hayabusa"), ignore_errors=False, onerror=None)
 
         else:
             print("[!] Hayabusa Executable not found!  Bypassing Hayabusa Processing...")
