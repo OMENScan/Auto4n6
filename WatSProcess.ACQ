@@ -1,0 +1,71 @@
+*******************************************************
+* Auto4n6: v0.03                                      *
+*  At-Scale Triage Collection Processor               *
+* Uses:                                               *
+*  AChoirX, OpenSearch                                *
+*******************************************************
+* Check Previous Run.  MUST BE BEFORE ANY PROCESSING  *
+*******************************************************
+VR9:CASE001
+SAY:[+] Case Name Set to: &VR9
+CKY:&Acq
+ SAY:[+] Processing Directory Already Exists: &Acq
+ BYE:
+END:
+*******************************************************
+*   Setup Syslog                                      *
+*******************************************************
+SET:CopyPath=Part
+SET:SyslogS:127.0.0.1
+SET:SyslogP=5514
+SET:SyslogL=min
+SAY:[+] Logging This Processing Run...
+OPN:&Dir\Auto4n6.csv
+OUT:"&Acn","&VR1","&Tim"
+SAY:[+] Processing At Scale Triage Collection: &VR1 (Full Path: &VR0)
+ACQ:\Triage
+*******************************************************
+* Log it to Prevent Running it again                  *
+*******************************************************
+OPN:WAtSDone.dat
+OUT:&VR0
+*******************************************************
+* If the Move Didnt work, its probably still writing  *
+* - Try 5 Times, Then Exit out                        *
+*******************************************************
+CN0:0
+LBL:CopyCol
+SAY:[+] Copying Collection: &VR1
+SET:CopyPath=None
+CPY:"&VR0" "&Acq"
+SET:CopyPath=Part
+CKN:&Acq\&VR1
+ CN0:++
+ N>>:&CN0 10
+  SAY:[!] Max Retries (&CN0) Error Copying Collection File - Exiting...
+  Bye:
+ END:
+SAY:[+] Retrying Copy (&CN0)...
+SLP:180
+JMP:CopyCol
+END:
+*******************************************************
+* Fell Through - Process the Triage Collection        *
+*******************************************************
+SAY:[+] Decompressing Triage Collection: &VR1
+*EXE:\Utils\7z\7za.exe x "&ACQ\&VR1" "-o&Acq" -r -y -aou
+UNZ:&ACQ\&VR1 &Acq
+SAY:[+] Triage Decompress Complete: &VR1
+SAY:[+] Determining Machine Name...
+LST:&Acn\Triage\OSQ\ts_system_identity.csv
+VR1:&LS0
+SAY:[+] Machine Name: &VR1
+SAY:[+] Copying Everything to OpenSearch for Ingest
+Set:CopyPath=None
+CPY:&ACQ\ASEP\ASEP-All.csv C:\dfir-opensearch\data\&VR9\&VR1
+CPY:&ACQ\ASEP\SchedTask.csv C:\dfir-opensearch\data\&VR9\&VR1
+CPY:&ACQ\Disk\USNJrnl.csv C:\dfir-opensearch\data\&VR9\&VR1
+CPY:&ACQ\FLS\FLSOut.csv C:\dfir-opensearch\data\&VR9\&VR1
+CPY:&ACQ\OSQ\*.* C:\dfir-opensearch\data\&VR9\&VR1
+SAY:[+] Re-Setting Defaults...
+Set:CopyPath=Part
